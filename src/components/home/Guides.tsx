@@ -14,7 +14,7 @@ export default function Guides() {
       <Container>
         <SectionHeading eyebrow="Learn" title="Latest Meal Prep Guides" />
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {guides.slice(0, 3).map((g, i) => (
             <motion.div
               key={g.slug}

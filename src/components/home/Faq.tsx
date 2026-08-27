@@ -5,16 +5,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { faqs } from "@/data/site";
+import { faqs as defaultFaqs, type Faq as FaqItem } from "@/data/site";
 import { cn } from "@/lib/utils";
 
-export default function Faq() {
+export default function Faq({
+  id,
+  title = "Meal Prep FAQs",
+  faqs = defaultFaqs,
+}: {
+  id?: string;
+  title?: string;
+  faqs?: FaqItem[];
+}) {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="bg-white py-20 md:py-28">
+    <section id={id} className="bg-white py-20 md:py-28">
       <Container className="max-w-3xl">
-        <SectionHeading eyebrow="FAQ" title="Frequently Asked Questions" />
+        <SectionHeading eyebrow="FAQ" title={title} />
 
         <div className="mt-12 divide-y divide-brand-border/60 rounded-[20px] border border-brand-border/60">
           {faqs.map((faq, i) => {

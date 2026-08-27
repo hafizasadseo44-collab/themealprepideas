@@ -26,7 +26,7 @@ export default function TrustBadges() {
           description="Every recipe on this site is tested for taste, nutrition, and how well it actually holds up in a container."
         />
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {badges.map((badge, i) => {
             const Icon = icons[i % icons.length];
             return (

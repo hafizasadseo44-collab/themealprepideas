@@ -16,7 +16,7 @@ export default function Containers() {
           description="The right containers make prep day faster and keep meals fresher, longer."
         />
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {containerTypes.map((c, i) => (
             <motion.div
               key={c.title}

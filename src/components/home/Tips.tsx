@@ -4,17 +4,33 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { tips } from "@/data/site";
+import { tips as defaultTips } from "@/data/site";
 
-export default function Tips() {
+type Tip = { title: string; description: string };
+
+export default function Tips({
+  id = "how-it-works",
+  eyebrow = "Meal Prep Tips",
+  title = "Five habits that make prep day painless",
+  image = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1000&q=80",
+  imageAlt = "Meal prep containers organized on a wooden table",
+  tips = defaultTips,
+}: {
+  id?: string;
+  eyebrow?: string;
+  title?: string;
+  image?: string;
+  imageAlt?: string;
+  tips?: Tip[];
+}) {
   return (
-    <section className="py-20 md:py-28">
+    <section id={id} className="py-20 md:py-28">
       <Container>
-        <div className="grid items-center gap-14 lg:grid-cols-2">
+        <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2">
           <div className="relative h-[380px] w-full overflow-hidden rounded-[24px] shadow-[0_30px_60px_-24px_rgba(17,24,39,0.3)] md:h-[440px]">
             <Image
-              src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1000&q=80"
-              alt="Meal prep containers organized on a wooden table"
+              src={image}
+              alt={imageAlt}
               fill
               sizes="(min-width: 1024px) 540px, 100vw"
               className="object-cover"
@@ -23,8 +39,8 @@ export default function Tips() {
 
           <div>
             <SectionHeading
-              eyebrow="Meal Prep Tips"
-              title="Five habits that make prep day painless"
+              eyebrow={eyebrow}
+              title={title}
               align="left"
               className="mx-0"
             />

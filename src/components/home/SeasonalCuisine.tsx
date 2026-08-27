@@ -11,7 +11,7 @@ function Row({ title, items }: { title: string; items: Collection[] }) {
   return (
     <div>
       <h3 className="font-display text-2xl text-brand-heading">{title}</h3>
-      <div className="mt-6 grid gap-5 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
         {items.map((c, i) => (
           <motion.div
             key={c.slug}
@@ -53,7 +53,7 @@ export default function SeasonalCuisine() {
   return (
     <section className="bg-white py-20 md:py-28">
       <Container>
-        <div className="grid gap-14 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-14 lg:grid-cols-2">
           <Row title="Seasonal Collections" items={seasonal} />
           <Row title="Cuisine Collections" items={cuisines} />
         </div>

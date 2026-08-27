@@ -19,16 +19,37 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "75+ Easy Meal Prep Ideas | The Meal Prep Ideas",
+  title: "100+ Easy Meal Prep Ideas for Breakfast, Lunch & Dinner | The Meal Prep Ideas",
   description:
-    "Discover 75+ easy, healthy meal prep ideas — breakfast, lunch, dinner, high protein, keto, vegan and more. Simple recipes, real photos, and step-by-step guides.",
+    "100+ easy meal prep ideas for breakfast, lunch, dinner, family meals, soups, snacks and bowls. Simple make-ahead recipes with step-by-step instructions and real photos.",
   metadataBase: new URL("https://themealprepideas.com"),
   openGraph: {
-    title: "75+ Easy Meal Prep Ideas | The Meal Prep Ideas",
+    title: "100+ Easy Meal Prep Ideas for Breakfast, Lunch & Dinner | The Meal Prep Ideas",
     description:
-      "Discover 75+ easy, healthy meal prep ideas — breakfast, lunch, dinner, high protein, keto, vegan and more.",
+      "100+ easy meal prep ideas for breakfast, lunch, dinner, family meals, soups, snacks and bowls — simple, make-ahead, and ready when you need them.",
     type: "website",
     siteName: "The Meal Prep Ideas",
+  },
+};
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "The Meal Prep Ideas",
+  url: "https://themealprepideas.com",
+  logo: "https://themealprepideas.com/favicon.ico",
+  sameAs: [],
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "The Meal Prep Ideas",
+  url: "https://themealprepideas.com",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: "https://themealprepideas.com/recipes?q={search_term_string}",
+    "query-input": "required name=search_term_string",
   },
 };
 
@@ -43,6 +64,14 @@ export default function RootLayout({
       className={`${dmSerif.variable} ${jakarta.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-brand-cream text-brand-body font-sans">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

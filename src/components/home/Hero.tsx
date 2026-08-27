@@ -1,24 +1,83 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Search, ArrowRight, PlayCircle, Star, Users, Salad } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, ArrowRight, PlayCircle, Star, Users, Salad, ChefHat } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
-import { heroPills } from "@/data/site";
+import Counter from "@/components/ui/Counter";
+
+const cyclingWords = ["Breakfast", "Lunch", "Dinner", "Busy Weeknights", "Every Goal"];
+
+const quickCategories = [
+  { label: "Breakfast", slug: "breakfast" },
+  { label: "Lunch", slug: "lunch" },
+  { label: "Dinner", slug: "dinner" },
+  { label: "Family Meals", slug: "family-meals" },
+  { label: "Soups & Chilis", slug: "soups" },
+  { label: "Snacks", slug: "snacks" },
+  { label: "Meal Prep Bowls", slug: "bowls" },
+];
+
+const orbitImages = [
+  { src: "https://images.unsplash.com/photo-1543352632-5a4b24e4d2a6?auto=format&fit=crop&w=400&q=80", alt: "Meal prep containers with rice, corn, olives, tomatoes and lentils" },
+  { src: "https://images.unsplash.com/photo-1747292718361-c838a9968ec7?auto=format&fit=crop&w=400&q=80", alt: "Colorful salad bowl with fresh ingredients" },
+  { src: "https://images.unsplash.com/photo-1490371475955-4cb3bfc72f71?auto=format&fit=crop&w=400&q=80", alt: "Granola and yogurt mason jar" },
+  { src: "https://images.unsplash.com/photo-1539136788836-5699e78bfc75?auto=format&fit=crop&w=400&q=80", alt: "Salmon fillet with quinoa and roasted broccoli" },
+  { src: "https://images.unsplash.com/photo-1679279726946-a158b8bcaa23?auto=format&fit=crop&w=400&q=80", alt: "Rice bowl with seasoned meat and sauce" },
+];
+
+function CyclingWord() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setIndex((i) => (i + 1) % cyclingWords.length), 2600);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <span className="relative inline-block align-bottom">
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={cyclingWords[index]}
+          initial={{ y: 22, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -22, opacity: 0 }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          className="inline-block text-brand-orange-deep"
+        >
+          {cyclingWords[index]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
 
 export default function Hero() {
   return (
     <section className="relative overflow-hidden pb-20 pt-10 md:pb-28 md:pt-16">
-      {/* Ambient background */}
+      {/* Ambient animated background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-32 left-1/2 h-[560px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-b from-brand-primary/12 via-brand-orange/8 to-transparent blur-3xl" />
-        <div className="absolute right-[-120px] top-[280px] h-[320px] w-[320px] rounded-full bg-brand-orange/10 blur-3xl" />
+        <motion.div
+          animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-32 left-1/2 h-[560px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-b from-brand-primary/14 via-brand-orange/10 to-transparent blur-3xl"
+        />
+        <motion.div
+          animate={{ x: [0, -24, 0], y: [0, 24, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute right-[-140px] top-[260px] h-[340px] w-[340px] rounded-full bg-brand-orange/12 blur-3xl"
+        />
+        <motion.div
+          animate={{ x: [0, 20, 0], y: [0, -16, 0] }}
+          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute -left-24 bottom-0 h-[260px] w-[260px] rounded-full bg-brand-primary/10 blur-3xl"
+        />
       </div>
 
       <Container>
-        <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-10">
+        <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-10">
           {/* Left: content */}
           <motion.div
             initial={{ opacity: 0, y: 28 }}
@@ -27,11 +86,12 @@ export default function Hero() {
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-primary/20 bg-white/70 px-4 py-1.5 text-sm font-medium text-brand-primary-dark shadow-sm backdrop-blur">
               <Salad className="size-4" />
-              75+ Recipes &middot; Updated for 2026
+              100+ Recipes &middot; Updated for 2026
             </div>
 
             <h1 className="mt-6 font-display text-[42px] leading-[1.08] text-balance text-brand-heading sm:text-[52px] lg:text-[58px]">
-              75+ Easy Meal Prep Ideas for Every Goal &amp; Schedule
+              <span className="text-brand-primary-dark">100+</span> Easy Meal Prep Ideas for{" "}
+              <CyclingWord />
             </h1>
 
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-brand-body">
@@ -41,40 +101,43 @@ export default function Hero() {
               life.
             </p>
 
-            {/* Search bar */}
-            <form className="mt-8 flex max-w-lg items-center gap-2 rounded-[18px] border border-brand-border/70 bg-white p-2 shadow-[0_16px_40px_-16px_rgba(17,24,39,0.18)]">
-              <Search className="ml-2 size-5 shrink-0 text-brand-light" />
-              <input
-                type="search"
-                placeholder="Search &ldquo;high protein lunch&rdquo;, &ldquo;chicken&rdquo;..."
-                className="h-11 w-full bg-transparent text-[15px] text-brand-heading placeholder:text-brand-light focus:outline-none"
-                aria-label="Search recipes"
-              />
-              <Button size="md" className="shrink-0">
-                Search
-              </Button>
-            </form>
+            {/* Advanced search trigger */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("open-search"))}
+              className="mt-8 flex w-full max-w-lg items-center gap-3 rounded-[18px] border border-brand-border/70 bg-white p-3.5 text-left shadow-[0_16px_40px_-16px_rgba(17,24,39,0.18)] transition-all duration-300 hover:border-brand-primary/40 hover:shadow-[0_20px_44px_-16px_rgba(17,24,39,0.24)]"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary-dark">
+                <Search className="size-4" />
+              </span>
+              <span className="min-w-0 flex-1 truncate text-[15px] text-brand-light">
+                Search 100+ recipes — <span className="font-medium text-brand-heading">try &ldquo;high protein lunch&rdquo;</span>
+              </span>
+              <span className="hidden shrink-0 rounded-md border border-brand-border/70 px-2 py-1 text-xs font-medium text-brand-light sm:inline-block">
+                Ctrl K
+              </span>
+            </button>
 
             {/* CTAs */}
             <div className="mt-6 flex flex-wrap items-center gap-4">
-              <Button href="/recipes" size="lg" icon={ArrowRight}>
+              <Button href="#breakfast" size="lg" icon={ArrowRight}>
                 Browse All Recipes
               </Button>
-              <Button href="/guides/how-to-meal-prep" variant="ghost" size="lg" icon={PlayCircle} iconPosition="left">
+              <Button href="#how-it-works" variant="ghost" size="lg" icon={PlayCircle} iconPosition="left">
                 How Meal Prep Works
               </Button>
             </div>
 
-            {/* Category pills */}
+            {/* Quick category links */}
             <div className="mt-8 flex flex-wrap gap-2.5">
-              {heroPills.map((pill) => (
-                <Link
-                  key={pill}
-                  href={`/categories/${pill.toLowerCase().replace(/\s+/g, "-")}`}
+              {quickCategories.map((cat) => (
+                <a
+                  key={cat.slug}
+                  href={`#${cat.slug}`}
                   className="rounded-full border border-brand-border/70 bg-white/80 px-4 py-2 text-sm font-medium text-brand-body transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-primary/50 hover:text-brand-primary-dark hover:shadow-md"
                 >
-                  {pill}
-                </Link>
+                  {cat.label}
+                </a>
               ))}
             </div>
 
@@ -107,49 +170,67 @@ export default function Hero() {
             </div>
           </motion.div>
 
-          {/* Right: editorial image composition */}
+          {/* Right: rotating image orbit */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
-            className="relative mx-auto h-[460px] w-full max-w-[560px] sm:h-[540px] lg:h-[600px]"
+            transition={{ duration: 0.9, ease: "easeOut", delay: 0.15 }}
+            className="relative mx-auto flex h-[400px] w-[400px] items-center justify-center sm:h-[500px] sm:w-[500px] lg:h-[600px] lg:w-[600px]"
           >
-            <div className="absolute right-[6%] top-0 h-[62%] w-[58%] overflow-hidden rounded-[24px] shadow-[0_30px_60px_-20px_rgba(17,24,39,0.35)]">
-              <Image
-                src="https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&w=900&q=80"
-                alt="Chicken and rice meal prep containers with fresh vegetables"
-                fill
-                sizes="(min-width: 1024px) 360px, 60vw"
-                className="object-cover transition-transform duration-700 hover:scale-105"
-                priority
-              />
+            {/* Glow behind the orbit */}
+            <div className="absolute inset-[8%] rounded-full bg-gradient-to-br from-brand-primary/18 via-brand-orange/12 to-transparent blur-2xl" />
+
+            {/* Faint orbit ring */}
+            <div className="absolute inset-[6%] rounded-full border border-dashed border-brand-primary/25" />
+
+            {/* Center hub */}
+            <div className="absolute inset-0 z-10 m-auto flex h-[34%] w-[34%] flex-col items-center justify-center rounded-full border border-brand-border/60 bg-white/95 text-center shadow-[0_24px_48px_-16px_rgba(17,24,39,0.28)] backdrop-blur">
+              <ChefHat className="size-6 text-brand-primary-dark" />
+              <p className="mt-1 font-display text-2xl leading-none text-brand-heading">
+                <Counter target={100} />+
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-brand-light">Recipes</p>
             </div>
 
-            <div className="absolute bottom-[4%] left-0 h-[46%] w-[54%] overflow-hidden rounded-[24px] shadow-[0_24px_48px_-16px_rgba(17,24,39,0.3)]">
-              <Image
-                src="https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=800&q=80"
-                alt="Overnight oats with fresh berries in a glass jar"
-                fill
-                sizes="(min-width: 1024px) 320px, 50vw"
-                className="object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
-
-            <div className="absolute bottom-[18%] right-0 h-[30%] w-[34%] overflow-hidden rounded-[20px] border-4 border-white shadow-[0_20px_40px_-14px_rgba(17,24,39,0.3)]">
-              <Image
-                src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80"
-                alt="Fresh salad bowl with vegetables"
-                fill
-                sizes="220px"
-                className="object-cover"
-              />
-            </div>
-
-            {/* Floating ingredient accents */}
+            {/* Rotating ring of images */}
             <motion.div
-              animate={{ y: [0, -14, 0] }}
+              className="absolute inset-0"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 42, repeat: Infinity, ease: "linear" }}
+            >
+              {orbitImages.map((img, i) => {
+                const angle = (360 / orbitImages.length) * i;
+                return (
+                  <div
+                    key={img.src}
+                    className="absolute inset-0"
+                    style={{ transform: `rotate(${angle}deg)` }}
+                  >
+                    <div className="absolute left-1/2 top-[10%] -translate-x-1/2 -translate-y-1/2">
+                      <motion.div
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 42, repeat: Infinity, ease: "linear" }}
+                        className="relative size-[104px] overflow-hidden rounded-full border-4 border-white shadow-[0_18px_36px_-12px_rgba(17,24,39,0.4)] sm:size-[128px] lg:size-[150px]"
+                      >
+                        <Image
+                          src={img.src}
+                          alt={img.alt}
+                          fill
+                          sizes="150px"
+                          className="object-cover"
+                        />
+                      </motion.div>
+                    </div>
+                  </div>
+                );
+              })}
+            </motion.div>
+
+            {/* Floating stat badges */}
+            <motion.div
+              animate={{ y: [0, -12, 0] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute left-[8%] top-[8%] flex items-center gap-2 rounded-2xl border border-brand-border/60 bg-white/90 px-3.5 py-2.5 shadow-[0_16px_32px_-12px_rgba(17,24,39,0.25)] backdrop-blur"
+              className="absolute -left-2 top-2 z-10 flex items-center gap-2 rounded-2xl border border-brand-border/60 bg-white/90 px-3.5 py-2.5 shadow-[0_16px_32px_-12px_rgba(17,24,39,0.25)] backdrop-blur sm:left-2"
             >
               <span className="flex size-8 items-center justify-center rounded-full bg-brand-primary/15 text-brand-primary-dark">
                 <Star className="size-4 fill-current" />
@@ -163,14 +244,14 @@ export default function Hero() {
             <motion.div
               animate={{ y: [0, 14, 0] }}
               transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-              className="absolute -right-3 bottom-[2%] flex items-center gap-2 rounded-2xl border border-brand-border/60 bg-white/90 px-3.5 py-2.5 shadow-[0_16px_32px_-12px_rgba(17,24,39,0.25)] backdrop-blur sm:right-4"
+              className="absolute -right-2 bottom-4 z-10 flex items-center gap-2 rounded-2xl border border-brand-border/60 bg-white/90 px-3.5 py-2.5 shadow-[0_16px_32px_-12px_rgba(17,24,39,0.25)] backdrop-blur sm:right-2"
             >
               <span className="flex size-8 items-center justify-center rounded-full bg-brand-orange/15 text-brand-orange-deep">
                 🔥
               </span>
               <div className="leading-tight">
-                <p className="text-xs font-semibold text-brand-heading">480 kcal</p>
-                <p className="text-[11px] text-brand-light">38g protein</p>
+                <p className="text-xs font-semibold text-brand-heading">100+ Ideas</p>
+                <p className="text-[11px] text-brand-light">7 collections</p>
               </div>
             </motion.div>
           </motion.div>

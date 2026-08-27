@@ -17,6 +17,16 @@ const legal = [
   { label: "Accessibility", href: "/accessibility" },
 ];
 
+// Slugs that map to a real page or a homepage section anchor instead of the
+// generic (not-yet-built) taxonomy route. Footer renders on every page, so
+// meal-type anchors need the root-relative "/#slug" form.
+const dietOverrides: Record<string, string> = {
+  vegan: "/vegan-meal-prep-ideas",
+  keto: "/keto-meal-prep-ideas",
+};
+
+const mealTypeAnchors = new Set(["breakfast", "lunch", "dinner", "snacks", "bowls"]);
+
 export default function Footer() {
   return (
     <footer className="border-t border-brand-border/60 bg-white">
@@ -71,7 +81,7 @@ export default function Footer() {
               {byDiet.slice(0, 5).map((item) => (
                 <li key={item.slug}>
                   <Link
-                    href={`/diet/${item.slug}`}
+                    href={dietOverrides[item.slug] ?? `/diet/${item.slug}`}
                     className="text-sm text-brand-light transition-colors hover:text-brand-primary-dark"
                   >
                     {item.label}
@@ -87,7 +97,7 @@ export default function Footer() {
               {byMealType.slice(0, 5).map((item) => (
                 <li key={item.slug}>
                   <Link
-                    href={`/meal-type/${item.slug}`}
+                    href={mealTypeAnchors.has(item.slug) ? `/#${item.slug}` : `/meal-type/${item.slug}`}
                     className="text-sm text-brand-light transition-colors hover:text-brand-primary-dark"
                   >
                     {item.label}

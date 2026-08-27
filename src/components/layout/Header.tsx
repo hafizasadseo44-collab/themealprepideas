@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Menu, X, ChefHat, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/Button";
+import SearchOverlay from "@/components/layout/SearchOverlay";
 
 const navLinks = [
   { label: "Browse Categories", href: "/categories", hasMenu: true },
@@ -15,9 +16,33 @@ const navLinks = [
 ];
 
 const megaMenuGroups = [
-  { title: "By Meal Type", items: ["Breakfast", "Lunch", "Dinner", "Snacks"] },
-  { title: "By Diet", items: ["Vegan", "Keto", "Low Carb", "Mediterranean"] },
-  { title: "By Protein", items: ["Chicken", "Salmon", "Ground Turkey", "Tofu"] },
+  {
+    title: "By Meal Type",
+    items: [
+      { label: "Breakfast", href: "/#breakfast" },
+      { label: "Lunch", href: "/#lunch" },
+      { label: "Dinner", href: "/#dinner" },
+      { label: "Snacks", href: "/#snacks" },
+    ],
+  },
+  {
+    title: "By Diet",
+    items: [
+      { label: "Vegan", href: "/vegan-meal-prep-ideas" },
+      { label: "Keto", href: "/keto-meal-prep-ideas" },
+      { label: "Low Carb", href: "/categories/low-carb" },
+      { label: "Mediterranean", href: "/categories/mediterranean" },
+    ],
+  },
+  {
+    title: "By Protein",
+    items: [
+      { label: "Chicken", href: "/keto-meal-prep-ideas#keto-chicken" },
+      { label: "Beef", href: "/keto-meal-prep-ideas#keto-beef" },
+      { label: "Salmon", href: "/keto-meal-prep-ideas#keto-fish-seafood" },
+      { label: "Tofu", href: "/vegan-meal-prep-ideas#tofu-tempeh" },
+    ],
+  },
 ];
 
 export default function Header() {
@@ -33,6 +58,7 @@ export default function Header() {
   }, []);
 
   return (
+    <>
     <header
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
@@ -41,13 +67,13 @@ export default function Header() {
           : "bg-transparent border-b border-transparent"
       )}
     >
-      <div className="mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between px-6 md:px-10">
-        <Link href="/" className="group flex items-center gap-2.5">
-          <span className="flex size-10 items-center justify-center rounded-[12px] bg-brand-primary text-white shadow-[0_6px_16px_-4px_rgba(63,163,77,0.5)] transition-transform duration-300 group-hover:scale-105">
-            <ChefHat className="size-5" />
+      <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between gap-3 px-4 sm:px-6 md:h-20 md:px-10">
+        <Link href="/" className="group flex min-w-0 items-center gap-2 md:gap-2.5">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-brand-primary text-white shadow-[0_6px_16px_-4px_rgba(63,163,77,0.5)] transition-transform duration-300 group-hover:scale-105 md:size-10 md:rounded-[12px]">
+            <ChefHat className="size-4 md:size-5" />
           </span>
-          <span className="font-display text-xl leading-none text-brand-heading">
-            The Meal Prep <span className="text-brand-primary-dark">Ideas</span>
+          <span className="truncate font-display text-base leading-none text-brand-heading sm:text-lg md:text-xl">
+            Meal Prep <span className="text-brand-primary-dark">Ideas</span>
           </span>
         </Link>
 
@@ -81,12 +107,12 @@ export default function Header() {
                             </p>
                             <ul className="space-y-2">
                               {group.items.map((item) => (
-                                <li key={item}>
+                                <li key={item.label}>
                                   <Link
-                                    href={`/categories/${item.toLowerCase().replace(/\s+/g, "-")}`}
+                                    href={item.href}
                                     className="text-sm text-brand-body transition-colors hover:text-brand-primary-dark"
                                   >
-                                    {item}
+                                    {item.label}
                                   </Link>
                                 </li>
                               ))}
@@ -110,12 +136,14 @@ export default function Header() {
           )}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 md:gap-3">
           <button
-            aria-label="Search"
-            className="flex size-11 items-center justify-center rounded-full border border-brand-border/70 bg-white/70 text-brand-body transition-all duration-300 hover:border-brand-primary/50 hover:text-brand-primary-dark"
+            type="button"
+            aria-label="Search recipes"
+            onClick={() => window.dispatchEvent(new Event("open-search"))}
+            className="flex size-9 shrink-0 items-center justify-center rounded-full border border-brand-border/70 bg-white/70 text-brand-body transition-all duration-300 hover:border-brand-primary/50 hover:text-brand-primary-dark md:size-11"
           >
-            <Search className="size-[18px]" />
+            <Search className="size-4 md:size-[18px]" />
           </button>
           <div className="hidden sm:block">
             <Button href="/recipes" size="md">
@@ -124,10 +152,10 @@ export default function Header() {
           </div>
           <button
             aria-label="Toggle menu"
-            className="flex size-11 items-center justify-center rounded-full border border-brand-border/70 bg-white/70 text-brand-body lg:hidden"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full border border-brand-border/70 bg-white/70 text-brand-body md:size-11 lg:hidden"
             onClick={() => setMobileOpen((v) => !v)}
           >
-            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            {mobileOpen ? <X className="size-4 md:size-5" /> : <Menu className="size-4 md:size-5" />}
           </button>
         </div>
       </div>
@@ -162,5 +190,7 @@ export default function Header() {
         )}
       </AnimatePresence>
     </header>
+    <SearchOverlay />
+    </>
   );
 }
