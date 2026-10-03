@@ -9,7 +9,8 @@ import Containers from "@/components/home/Containers";
 import Guides from "@/components/home/Guides";
 import Faq from "@/components/home/Faq";
 import Newsletter from "@/components/home/Newsletter";
-import { categorySections, faqs } from "@/data/site";
+import { faqs } from "@/data/site";
+import { getPageWithSections } from "@/lib/recipes/queries";
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -24,26 +25,29 @@ const faqSchema = {
   })),
 };
 
-const recipeListSchema = {
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  itemListElement: categorySections.flatMap((section) =>
-    section.recipes.map((recipe, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      item: {
-        "@type": "Recipe",
-        name: recipe.title,
-        description: recipe.description,
-        image: recipe.image,
-        recipeCategory: section.heading,
-        url: `https://themealprepideas.com/recipes/${recipe.slug}`,
-      },
-    }))
-  ),
-};
+export default async function Home() {
+  const home = await getPageWithSections("home");
+  const sections = home?.sections ?? [];
 
-export default function Home() {
+  const recipeListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: sections.flatMap((section) =>
+      section.recipes.map((recipe, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "Recipe",
+          name: recipe.title,
+          description: recipe.description,
+          image: recipe.image,
+          recipeCategory: section.heading,
+          url: `https://themealprepideas.com/recipes/${recipe.slug}`,
+        },
+      }))
+    ),
+  };
+
   return (
     <>
       <script
@@ -57,7 +61,7 @@ export default function Home() {
       <Hero />
       <Intro />
       <Comparison />
-      {categorySections.map((section) => (
+      {sections.map((section) => (
         <CategorySection key={section.slug} section={section} />
       ))}
       <BrowseSections />

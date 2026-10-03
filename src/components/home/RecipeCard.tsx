@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Clock, Flame, Beef, Star, ArrowRight, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSavedRecipes } from "@/components/account/SavedRecipesProvider";
 import type { Recipe } from "@/data/site";
 
 export default function RecipeCard({
@@ -15,7 +16,8 @@ export default function RecipeCard({
   recipe: Recipe;
   index?: number;
 }) {
-  const [saved, setSaved] = useState(false);
+  const { isSaved, toggle } = useSavedRecipes();
+  const saved = isSaved(recipe.slug);
   const [pop, setPop] = useState(false);
 
   const hasMeta = Boolean(recipe.prepTime || recipe.calories || recipe.protein);
@@ -96,7 +98,7 @@ export default function RecipeCard({
         <button
           type="button"
           onClick={() => {
-            setSaved((s) => !s);
+            toggle(recipe.slug);
             setPop(false);
             requestAnimationFrame(() => setPop(true));
           }}

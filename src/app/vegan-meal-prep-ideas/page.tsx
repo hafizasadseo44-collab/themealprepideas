@@ -7,20 +7,26 @@ import Tips from "@/components/home/Tips";
 import Faq from "@/components/home/Faq";
 import RelatedGuides from "@/components/home/RelatedGuides";
 import Newsletter from "@/components/home/Newsletter";
-import { veganTips, veganSections, veganFaqs, veganRecipeCount } from "@/data/vegan";
+import { veganTips, veganFaqs } from "@/data/vegan";
+import { getPageWithSections } from "@/lib/recipes/queries";
 
-export const metadata: Metadata = {
-  title: `Vegan Meal Prep Ideas: ${veganRecipeCount}+ Plant-Based Recipes | The Meal Prep Ideas`,
-  description:
-    "115+ vegan meal prep ideas for every meal — tofu, tempeh, bowls, pasta, high-protein, and snacks. Plant-based recipes you can batch-cook and prep ahead, no meat or dairy required.",
-  openGraph: {
-    title: `Vegan Meal Prep Ideas: ${veganRecipeCount}+ Plant-Based Recipes`,
+export async function generateMetadata(): Promise<Metadata> {
+  const vegan = await getPageWithSections("vegan");
+  const count = vegan?.totalCount ?? 115;
+
+  return {
+    title: `Vegan Meal Prep Ideas: ${count}+ Plant-Based Recipes | The Meal Prep Ideas`,
     description:
-      "115+ vegan meal prep ideas for every meal — tofu, tempeh, bowls, pasta, high-protein, and snacks. All plant-based, all make-ahead.",
-    type: "website",
-    siteName: "The Meal Prep Ideas",
-  },
-};
+      "115+ vegan meal prep ideas for every meal — tofu, tempeh, bowls, pasta, high-protein, and snacks. Plant-based recipes you can batch-cook and prep ahead, no meat or dairy required.",
+    openGraph: {
+      title: `Vegan Meal Prep Ideas: ${count}+ Plant-Based Recipes`,
+      description:
+        "115+ vegan meal prep ideas for every meal — tofu, tempeh, bowls, pasta, high-protein, and snacks. All plant-based, all make-ahead.",
+      type: "website",
+      siteName: "The Meal Prep Ideas",
+    },
+  };
+}
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -35,26 +41,6 @@ const faqSchema = {
   })),
 };
 
-const recipeListSchema = {
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  itemListElement: veganSections.flatMap((section) =>
-    section.recipes.map((recipe, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      item: {
-        "@type": "Recipe",
-        name: recipe.title,
-        description: recipe.description,
-        image: recipe.image,
-        recipeCategory: section.heading,
-        suitableForDiet: "https://schema.org/VeganDiet",
-        url: `https://themealprepideas.com/vegan-meal-prep-ideas#${recipe.slug}`,
-      },
-    }))
-  ),
-};
-
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -64,7 +50,30 @@ const breadcrumbSchema = {
   ],
 };
 
-export default function VeganMealPrepPage() {
+export default async function VeganMealPrepPage() {
+  const vegan = await getPageWithSections("vegan");
+  const sections = vegan?.sections ?? [];
+
+  const recipeListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: sections.flatMap((section) =>
+      section.recipes.map((recipe, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "Recipe",
+          name: recipe.title,
+          description: recipe.description,
+          image: recipe.image,
+          recipeCategory: section.heading,
+          suitableForDiet: "https://schema.org/VeganDiet",
+          url: `https://themealprepideas.com/vegan-meal-prep-ideas#${recipe.slug}`,
+        },
+      }))
+    ),
+  };
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
@@ -73,7 +82,7 @@ export default function VeganMealPrepPage() {
 
       <VeganHero />
 
-      <VeganAbout />
+      <VeganAbout sectionCount={sections.length} />
 
       <Tips
         id="vegan-tips"
@@ -84,7 +93,7 @@ export default function VeganMealPrepPage() {
         tips={veganTips}
       />
 
-      {veganSections.map((section) => (
+      {sections.map((section) => (
         <CategorySection key={section.slug} section={section} />
       ))}
 

@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { ChefHat, Drumstick, Salad, Flame, UtensilsCrossed } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Counter from "@/components/ui/Counter";
-import { ketoSections } from "@/data/keto";
 
 const points = [
   { label: "Protein First", icon: Drumstick },
@@ -14,7 +13,7 @@ const points = [
   { label: "Batch Cooked", icon: UtensilsCrossed },
 ];
 
-export default function KetoAbout() {
+export default function KetoAbout({ sectionCount }: { sectionCount: number }) {
   return (
     <section className="relative overflow-hidden bg-white py-16 md:py-24">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -90,7 +89,7 @@ export default function KetoAbout() {
               </span>
               <div className="leading-tight">
                 <p className="font-display text-2xl text-brand-heading">
-                  <Counter target={ketoSections.length} />
+                  <Counter target={sectionCount} />
                 </p>
                 <p className="text-xs text-brand-light">Recipe Collections</p>
               </div>

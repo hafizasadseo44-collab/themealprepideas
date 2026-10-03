@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { ChefHat, CalendarCheck, Flame, Shuffle, Leaf } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Counter from "@/components/ui/Counter";
-import { veganSections } from "@/data/vegan";
 
 const points = [
   { label: "Plan Ahead", icon: CalendarCheck },
@@ -14,7 +13,7 @@ const points = [
   { label: "100% Plant-Based", icon: Leaf },
 ];
 
-export default function VeganAbout() {
+export default function VeganAbout({ sectionCount }: { sectionCount: number }) {
   return (
     <section className="relative overflow-hidden bg-white py-16 md:py-24">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -90,7 +89,7 @@ export default function VeganAbout() {
               </span>
               <div className="leading-tight">
                 <p className="font-display text-2xl text-brand-heading">
-                  <Counter target={veganSections.length} />
+                  <Counter target={sectionCount} />
                 </p>
                 <p className="text-xs text-brand-light">Recipe Collections</p>
               </div>

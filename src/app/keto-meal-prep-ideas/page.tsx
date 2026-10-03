@@ -8,20 +8,26 @@ import Tips from "@/components/home/Tips";
 import Faq from "@/components/home/Faq";
 import RelatedGuides from "@/components/home/RelatedGuides";
 import Newsletter from "@/components/home/Newsletter";
-import { ketoTips, ketoSections, ketoStorage, ketoFaqs, ketoRecipeCount } from "@/data/keto";
+import { ketoTips, ketoStorage, ketoFaqs } from "@/data/keto";
+import { getPageWithSections } from "@/lib/recipes/queries";
 
-export const metadata: Metadata = {
-  title: `Keto Meal Prep Ideas: ${ketoRecipeCount}+ Low-Carb Recipes | The Meal Prep Ideas`,
-  description:
-    "78+ keto meal prep ideas for breakfast, lunch, dinner, and snacks — chicken, beef, salmon, and vegetarian options included. Low-carb recipes you can batch-cook and prep ahead for the week.",
-  openGraph: {
-    title: `Keto Meal Prep Ideas: ${ketoRecipeCount}+ Low-Carb Recipes`,
+export async function generateMetadata(): Promise<Metadata> {
+  const keto = await getPageWithSections("keto");
+  const count = keto?.totalCount ?? 85;
+
+  return {
+    title: `Keto Meal Prep Ideas: ${count}+ Low-Carb Recipes | The Meal Prep Ideas`,
     description:
-      "78+ keto meal prep ideas for every meal — chicken, beef, salmon, and vegetarian options included. All low-carb, all make-ahead.",
-    type: "website",
-    siteName: "The Meal Prep Ideas",
-  },
-};
+      "78+ keto meal prep ideas for breakfast, lunch, dinner, and snacks — chicken, beef, salmon, and vegetarian options included. Low-carb recipes you can batch-cook and prep ahead for the week.",
+    openGraph: {
+      title: `Keto Meal Prep Ideas: ${count}+ Low-Carb Recipes`,
+      description:
+        "78+ keto meal prep ideas for every meal — chicken, beef, salmon, and vegetarian options included. All low-carb, all make-ahead.",
+      type: "website",
+      siteName: "The Meal Prep Ideas",
+    },
+  };
+}
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -36,26 +42,6 @@ const faqSchema = {
   })),
 };
 
-const recipeListSchema = {
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  itemListElement: ketoSections.flatMap((section) =>
-    section.recipes.map((recipe, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      item: {
-        "@type": "Recipe",
-        name: recipe.title,
-        description: recipe.description,
-        image: recipe.image,
-        recipeCategory: section.heading,
-        suitableForDiet: "https://schema.org/LowCalorieDiet",
-        url: `https://themealprepideas.com/keto-meal-prep-ideas#${recipe.slug}`,
-      },
-    }))
-  ),
-};
-
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -65,7 +51,30 @@ const breadcrumbSchema = {
   ],
 };
 
-export default function KetoMealPrepPage() {
+export default async function KetoMealPrepPage() {
+  const keto = await getPageWithSections("keto");
+  const sections = keto?.sections ?? [];
+
+  const recipeListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: sections.flatMap((section) =>
+      section.recipes.map((recipe, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "Recipe",
+          name: recipe.title,
+          description: recipe.description,
+          image: recipe.image,
+          recipeCategory: section.heading,
+          suitableForDiet: "https://schema.org/LowCalorieDiet",
+          url: `https://themealprepideas.com/keto-meal-prep-ideas#${recipe.slug}`,
+        },
+      }))
+    ),
+  };
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
@@ -74,7 +83,7 @@ export default function KetoMealPrepPage() {
 
       <KetoHero />
 
-      <KetoAbout />
+      <KetoAbout sectionCount={sections.length} />
 
       <Tips
         id="keto-tips"
@@ -85,7 +94,7 @@ export default function KetoMealPrepPage() {
         tips={ketoTips}
       />
 
-      {ketoSections.map((section) => (
+      {sections.map((section) => (
         <CategorySection key={section.slug} section={section} />
       ))}
 

@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# stray local dev build cache (dev-only distDir in next.config.ts)
+/Users/
+.next-cache/
+
 # production
 /build
 
