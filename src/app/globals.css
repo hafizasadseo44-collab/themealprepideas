@@ -145,13 +145,13 @@ html {
   margin: 1em 0 0.4em;
   font-family: var(--font-display), Georgia, serif;
   font-size: 1.5rem;
-  color: var(--color-heading);
+  color: var(--color-primary-dark);
 }
 .prose-editor h3 {
   margin: 0.9em 0 0.3em;
   font-family: var(--font-display), Georgia, serif;
   font-size: 1.25rem;
-  color: var(--color-heading);
+  color: var(--color-primary);
 }
 .prose-editor ul,
 .prose-editor ol {
