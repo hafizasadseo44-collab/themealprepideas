@@ -7,6 +7,7 @@ import { ChefHat, ArrowRight, Mail } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import { byDiet, byMealType } from "@/data/site";
+import AskAiSection from "./AskAiSection";
 
 const footerNav = [
   { label: "Recipes", href: "/recipes" },
@@ -140,7 +141,11 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-brand-border/60 pt-8 sm:flex-row">
+        <div className="mt-16">
+          <AskAiSection />
+        </div>
+
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-brand-border/60 pt-8 sm:flex-row">
           <p className="text-sm text-brand-light">
             © {new Date().getFullYear()} The Meal Prep Ideas. All rights reserved.
           </p>
