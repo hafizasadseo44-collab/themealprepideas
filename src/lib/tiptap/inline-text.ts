@@ -44,3 +44,25 @@ export function markdownToTextRuns(text: string): TiptapNode[] {
     return { type: "text", text: part };
   });
 }
+
+/** 
+ * Recursively sanitizes Tiptap JSON to remove any broken/temporary image nodes 
+ * (like blob: or data: URLs) that shouldn't be loaded into the editor or saved to DB.
+ */
+export function sanitizeTiptapJson(node: TiptapNode): TiptapNode {
+  if (!node.content) return node;
+  
+  const cleanedContent = node.content
+    .filter((child) => {
+      if (child.type === "image") {
+        const src = child.attrs?.src as string | undefined;
+        if (src && (src.startsWith("blob:") || src.startsWith("data:"))) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .map(sanitizeTiptapJson);
+
+  return { ...node, content: cleanedContent };
+}

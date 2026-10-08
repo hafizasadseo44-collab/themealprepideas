@@ -15,7 +15,7 @@ import MediaPicker from "@/components/admin/media/MediaPicker";
 import { createPost, updatePost, type PostInput } from "@/lib/posts/mutations";
 import { slugify } from "@/lib/posts/types";
 import type { BlogPost, Category, PostStatus } from "@/lib/posts/types";
-import type { TiptapNode } from "@/lib/tiptap/inline-text";
+import { sanitizeTiptapJson, type TiptapNode } from "@/lib/tiptap/inline-text";
 import { uploadImage, type MediaItem } from "@/lib/media/upload";
 
 const statusOptions: { value: PostStatus; label: string }[] = [
@@ -94,7 +94,7 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
 
   const editor = useEditor({
     extensions: editorExtensions,
-    content: (post?.contentJson as JSONContent) ?? { type: "doc", content: [{ type: "paragraph" }] },
+    content: sanitizeTiptapJson((post?.contentJson as TiptapNode) ?? { type: "doc", content: [{ type: "paragraph" }] }) as JSONContent,
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -107,7 +107,8 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
         const file = imageItem.getAsFile();
         if (!file) return false;
         event.preventDefault();
-        uploadAndInsertImage(file);
+        setAutosaveStatus("saving");
+        uploadAndInsertImage(file).finally(() => setAutosaveStatus("saved"));
         return true;
       },
       handleDrop(_view, event, _slice, moved) {
@@ -116,7 +117,8 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
         const imageFile = files.find((f) => f.type.startsWith("image/"));
         if (!imageFile) return false;
         event.preventDefault();
-        uploadAndInsertImage(imageFile);
+        setAutosaveStatus("saving");
+        uploadAndInsertImage(imageFile).finally(() => setAutosaveStatus("saved"));
         return true;
       },
     },
@@ -437,7 +439,7 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
             {saving ? "Saving…" : currentId ? "Update Post" : "Save Post"}
           </button>
           <p className="mt-2 text-center text-[11px] text-brand-light">
-            Your work is autosaved as a draft every {AUTOSAVE_INTERVAL_MS / 1000}s.
+            Your work is autosaved automatically as you type.
           </p>
 
           <div className="mt-4 space-y-2 border-t border-brand-border/60 pt-4">

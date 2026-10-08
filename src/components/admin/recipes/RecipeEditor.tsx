@@ -25,7 +25,7 @@ import MediaPicker from "@/components/admin/media/MediaPicker";
 import Switch from "@/components/ui/Switch";
 import { createRecipe, updateRecipe, type RecipeInput } from "@/lib/recipes/mutations";
 import { slugify, type Recipe, type RecipePage, type RecipeStatus } from "@/lib/recipes/types";
-import type { TiptapNode } from "@/lib/tiptap/inline-text";
+import { sanitizeTiptapJson, type TiptapNode } from "@/lib/tiptap/inline-text";
 import { uploadImage, type MediaItem } from "@/lib/media/upload";
 
 const statusOptions: { value: RecipeStatus; label: string }[] = [
@@ -129,7 +129,7 @@ export default function RecipeEditor({
 
   const editor = useEditor({
     extensions: editorExtensions,
-    content: (recipe?.contentJson as JSONContent) ?? { type: "doc", content: [{ type: "paragraph" }] },
+    content: sanitizeTiptapJson((recipe?.contentJson as TiptapNode) ?? { type: "doc", content: [{ type: "paragraph" }] }) as JSONContent,
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -144,7 +144,11 @@ export default function RecipeEditor({
         const file = imageItem.getAsFile();
         if (!file) return false;
         event.preventDefault();
-        uploadAndInsertImage(file);
+        
+        // Use a temporary loading toast if we had one, for now just fire it off.
+        const toastId = Math.random().toString(36).substring(7);
+        setAutosaveStatus("saving"); // Double as an upload indicator
+        uploadAndInsertImage(file).finally(() => setAutosaveStatus("saved"));
         return true;
       },
       // Intercept drag-and-drop image files and upload them too.
@@ -154,7 +158,9 @@ export default function RecipeEditor({
         const imageFile = files.find((f) => f.type.startsWith("image/"));
         if (!imageFile) return false;
         event.preventDefault();
-        uploadAndInsertImage(imageFile);
+        
+        setAutosaveStatus("saving"); // Double as an upload indicator
+        uploadAndInsertImage(imageFile).finally(() => setAutosaveStatus("saved"));
         return true;
       },
     },
