@@ -17,6 +17,13 @@ import { getHeadings } from "@/lib/posts/types";
 
 const SITE_URL = "https://themealprepideas.com";
 
+// Allow slugs not present at build time (newly published recipes) to be
+// rendered on-demand instead of returning 404.
+export const dynamicParams = true;
+// Re-validate ISR pages at most every 60 s so content updates (images,
+// edits) appear quickly even if revalidatePath() hasn't fired yet.
+export const revalidate = 60;
+
 export async function generateStaticParams() {
   const slugs = await getAllPublishedRecipeSlugs();
   return slugs.map((slug) => ({ slug }));

@@ -33,7 +33,7 @@ const statusOptions: { value: RecipeStatus; label: string }[] = [
   { value: "published", label: "Published" },
 ];
 
-const AUTOSAVE_INTERVAL_MS = 20000;
+const AUTOSAVE_INTERVAL_MS = 5000; // 5 s — fast enough that a page refresh won't lose recent edits
 
 function timeAgo(date: Date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -102,6 +102,13 @@ export default function RecipeEditor({
   const [autosaveStatus, setAutosaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [, forceTick] = useState(0);
+
+  // A ref so Toolbar/SelectionMenu can request an immediate autosave (e.g.
+  // right after inserting an image) without causing re-renders.
+  const pendingAutosaveRef = useRef(false);
+  const autosaveInProgressRef = useRef(false);
+  const currentIdRef = useRef<string | null>(currentId);
+  useEffect(() => { currentIdRef.current = currentId; }, [currentId]);
 
   const editor = useEditor({
     extensions: editorExtensions,
@@ -233,28 +240,61 @@ export default function RecipeEditor({
     ]
   );
 
+  // Core autosave helper — called both by the interval and by immediate
+  // triggers (e.g. right after an image is inserted into the editor).
+  const runAutosave = useCallback(async () => {
+    if (autosaveInProgressRef.current) return;
+    if (!title.trim()) return;
+    const input = buildInput(savedStatusRef.current);
+    if (!input) return;
+
+    autosaveInProgressRef.current = true;
+    setAutosaveStatus("saving");
+    const result = currentIdRef.current
+      ? await updateRecipe(currentIdRef.current, input)
+      : await createRecipe(input);
+    autosaveInProgressRef.current = false;
+
+    if (!result.ok) {
+      setAutosaveStatus("error");
+      return;
+    }
+    if (!currentIdRef.current) {
+      currentIdRef.current = result.id;
+      setCurrentId(result.id);
+    }
+    setAutosaveStatus("saved");
+    setLastSavedAt(new Date());
+    pendingAutosaveRef.current = false;
+  }, [title, buildInput]);
+
   // Silent background autosave — never changes the recipe's live/published
   // status, only persists content so nothing is lost if the browser closes.
   useEffect(() => {
-    const interval = setInterval(async () => {
-      if (!title.trim()) return;
-      const input = buildInput(savedStatusRef.current);
-      if (!input) return;
-
-      setAutosaveStatus("saving");
-      const result = currentId ? await updateRecipe(currentId, input) : await createRecipe(input);
-
-      if (!result.ok) {
-        setAutosaveStatus("error");
-        return;
-      }
-      if (!currentId) setCurrentId(result.id);
-      setAutosaveStatus("saved");
-      setLastSavedAt(new Date());
+    const interval = setInterval(() => {
+      runAutosave();
     }, AUTOSAVE_INTERVAL_MS);
-
     return () => clearInterval(interval);
-  }, [title, buildInput, currentId]);
+  }, [runAutosave]);
+
+  // Debounced immediate save — fires ~1.5 s after any editor change so that
+  // inserted images (and other edits) are persisted well before a page refresh.
+  useEffect(() => {
+    if (!editor) return;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const handleUpdate = () => {
+      pendingAutosaveRef.current = true;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (pendingAutosaveRef.current) runAutosave();
+      }, 1500);
+    };
+    editor.on("update", handleUpdate);
+    return () => {
+      editor.off("update", handleUpdate);
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
+  }, [editor, runAutosave]);
 
   useEffect(() => {
     if (!lastSavedAt) return;
@@ -428,7 +468,7 @@ export default function RecipeEditor({
             {saving ? "Saving…" : currentId ? "Update Recipe" : "Save Recipe"}
           </button>
           <p className="mt-2 text-center text-[11px] text-brand-light">
-            Your work is autosaved as a draft every {AUTOSAVE_INTERVAL_MS / 1000}s.
+            Your work is autosaved automatically as you type.
           </p>
         </div>
 
