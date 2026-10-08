@@ -16,7 +16,7 @@ import { createPost, updatePost, type PostInput } from "@/lib/posts/mutations";
 import { slugify } from "@/lib/posts/types";
 import type { BlogPost, Category, PostStatus } from "@/lib/posts/types";
 import type { TiptapNode } from "@/lib/tiptap/inline-text";
-import type { MediaItem } from "@/lib/media/upload";
+import { uploadImage, type MediaItem } from "@/lib/media/upload";
 
 const statusOptions: { value: PostStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
@@ -24,7 +24,7 @@ const statusOptions: { value: PostStatus; label: string }[] = [
   { value: "scheduled", label: "Scheduled" },
 ];
 
-const AUTOSAVE_INTERVAL_MS = 20000;
+const AUTOSAVE_INTERVAL_MS = 5000; // 5 s fallback; debounced save fires in 1.5 s after any edit
 
 function timeAgo(date: Date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -71,6 +71,27 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [, forceTick] = useState(0);
 
+  // Always-up-to-date ref to the editor instance so async upload callbacks
+  // (paste/drop) can access it without stale closures.
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
+  const pendingAutosaveRef = useRef(false);
+  const autosaveInProgressRef = useRef(false);
+  const currentIdRef = useRef<string | null>(post?.id ?? null);
+  useEffect(() => { currentIdRef.current = currentId; }, [currentId]);
+
+  /** Upload a raw File to Supabase and insert into the editor as a
+   * persistent image node (never a blob: URL). */
+  const uploadAndInsertImage = useCallback(async (file: File): Promise<boolean> => {
+    const ed = editorRef.current;
+    if (!ed || !file.type.startsWith("image/")) return false;
+    const fd = new FormData();
+    fd.append("file", file);
+    const result = await uploadImage(fd);
+    if (!result.ok) return false;
+    ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
+    return true;
+  }, []);
+
   const editor = useEditor({
     extensions: editorExtensions,
     content: (post?.contentJson as JSONContent) ?? { type: "doc", content: [{ type: "paragraph" }] },
@@ -79,8 +100,30 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
       attributes: {
         class: "prose-editor min-h-[420px] px-6 py-5 focus:outline-none",
       },
+      handlePaste(_view, event) {
+        const items = Array.from(event.clipboardData?.items ?? []);
+        const imageItem = items.find((i) => i.kind === "file" && i.type.startsWith("image/"));
+        if (!imageItem) return false;
+        const file = imageItem.getAsFile();
+        if (!file) return false;
+        event.preventDefault();
+        uploadAndInsertImage(file);
+        return true;
+      },
+      handleDrop(_view, event, _slice, moved) {
+        if (moved) return false;
+        const files = Array.from(event.dataTransfer?.files ?? []);
+        const imageFile = files.find((f) => f.type.startsWith("image/"));
+        if (!imageFile) return false;
+        event.preventDefault();
+        uploadAndInsertImage(imageFile);
+        return true;
+      },
     },
   });
+
+  // Keep editorRef in sync.
+  useEffect(() => { editorRef.current = editor; }, [editor]);
 
   // Tracks the currently-selected image node in the editor so its Alt Text /
   // Title fields can be edited from a sidebar panel, WordPress-block-style.
@@ -178,29 +221,43 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
     [editor, title, slug, excerpt, coverImageUrl, coverImageAlt, categoryId, scheduledFor, tags, trending, featured, seo]
   );
 
-  // Silent background autosave — never changes the post's live/published
-  // status, only persists content so nothing is lost if the browser closes.
-  // It always writes with whatever status was last explicitly saved.
+  // Core autosave — shared by the interval and the debounced editor listener.
+  const runAutosave = useCallback(async () => {
+    if (autosaveInProgressRef.current) return;
+    if (!title.trim()) return;
+    const input = buildInput(savedStatusRef.current);
+    if (!input) return;
+    autosaveInProgressRef.current = true;
+    setAutosaveStatus("saving");
+    const result = currentIdRef.current
+      ? await updatePost(currentIdRef.current, input)
+      : await createPost(input);
+    autosaveInProgressRef.current = false;
+    if (!result.ok) { setAutosaveStatus("error"); return; }
+    if (!currentIdRef.current) { currentIdRef.current = result.id; setCurrentId(result.id); }
+    setAutosaveStatus("saved");
+    setLastSavedAt(new Date());
+    pendingAutosaveRef.current = false;
+  }, [title, buildInput]);
+
+  // Fallback interval autosave.
   useEffect(() => {
-    const interval = setInterval(async () => {
-      if (!title.trim()) return; // nothing worth saving yet
-      const input = buildInput(savedStatusRef.current);
-      if (!input) return;
-
-      setAutosaveStatus("saving");
-      const result = currentId ? await updatePost(currentId, input) : await createPost(input);
-
-      if (!result.ok) {
-        setAutosaveStatus("error");
-        return;
-      }
-      if (!currentId) setCurrentId(result.id);
-      setAutosaveStatus("saved");
-      setLastSavedAt(new Date());
-    }, AUTOSAVE_INTERVAL_MS);
-
+    const interval = setInterval(() => { runAutosave(); }, AUTOSAVE_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [title, buildInput, currentId]);
+  }, [runAutosave]);
+
+  // Debounced save fires 1.5 s after any editor change (catches image inserts).
+  useEffect(() => {
+    if (!editor) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onUpdate = () => {
+      pendingAutosaveRef.current = true;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => { if (pendingAutosaveRef.current) runAutosave(); }, 1500);
+    };
+    editor.on("update", onUpdate);
+    return () => { editor.off("update", onUpdate); if (timer) clearTimeout(timer); };
+  }, [editor, runAutosave]);
 
   // Tick the "Saved Xs ago" label forward every few seconds.
   useEffect(() => {

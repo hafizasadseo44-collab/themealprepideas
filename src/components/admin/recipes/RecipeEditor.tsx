@@ -26,7 +26,7 @@ import Switch from "@/components/ui/Switch";
 import { createRecipe, updateRecipe, type RecipeInput } from "@/lib/recipes/mutations";
 import { slugify, type Recipe, type RecipePage, type RecipeStatus } from "@/lib/recipes/types";
 import type { TiptapNode } from "@/lib/tiptap/inline-text";
-import type { MediaItem } from "@/lib/media/upload";
+import { uploadImage, type MediaItem } from "@/lib/media/upload";
 
 const statusOptions: { value: RecipeStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
@@ -110,6 +110,23 @@ export default function RecipeEditor({
   const currentIdRef = useRef<string | null>(currentId);
   useEffect(() => { currentIdRef.current = currentId; }, [currentId]);
 
+  // Always-up-to-date ref to the editor instance so async callbacks
+  // (paste/drop upload) can access it without stale closures.
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
+
+  /** Upload a raw File to Supabase and insert it into the editor as a
+   * persistent image node. */
+  const uploadAndInsertImage = useCallback(async (file: File): Promise<boolean> => {
+    const ed = editorRef.current;
+    if (!ed || !file.type.startsWith("image/")) return false;
+    const fd = new FormData();
+    fd.append("file", file);
+    const result = await uploadImage(fd);
+    if (!result.ok) return false;
+    ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
+    return true;
+  }, []);
+
   const editor = useEditor({
     extensions: editorExtensions,
     content: (recipe?.contentJson as JSONContent) ?? { type: "doc", content: [{ type: "paragraph" }] },
@@ -118,8 +135,35 @@ export default function RecipeEditor({
       attributes: {
         class: "prose-editor min-h-[420px] px-6 py-5 focus:outline-none",
       },
+      // Intercept clipboard pastes that contain a raw image file and upload
+      // them to Supabase so we always store a real URL, never a blob: URL.
+      handlePaste(_view, event) {
+        const items = Array.from(event.clipboardData?.items ?? []);
+        const imageItem = items.find((i) => i.kind === "file" && i.type.startsWith("image/"));
+        if (!imageItem) return false;
+        const file = imageItem.getAsFile();
+        if (!file) return false;
+        event.preventDefault();
+        uploadAndInsertImage(file);
+        return true;
+      },
+      // Intercept drag-and-drop image files and upload them too.
+      handleDrop(_view, event, _slice, moved) {
+        if (moved) return false;
+        const files = Array.from(event.dataTransfer?.files ?? []);
+        const imageFile = files.find((f) => f.type.startsWith("image/"));
+        if (!imageFile) return false;
+        event.preventDefault();
+        uploadAndInsertImage(imageFile);
+        return true;
+      },
     },
   });
+
+  // Keep editorRef in sync so async upload callbacks always have latest editor.
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
 
   // Tracks the currently-selected image node so its Alt Text / Title fields
   // can be edited from a sidebar panel, WordPress-block-style.
