@@ -56,7 +56,7 @@ export function sanitizeTiptapJson(node: TiptapNode): TiptapNode {
     .filter((child) => {
       if (child.type === "image") {
         const src = child.attrs?.src as string | undefined;
-        if (src && (src.startsWith("blob:") || src.startsWith("data:"))) {
+        if (!src || src.startsWith("blob:") || src.startsWith("data:")) {
           return false;
         }
       }
