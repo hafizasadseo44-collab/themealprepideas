@@ -134,6 +134,7 @@ export default function RecipeEditor({
     const result = await uploadImage(fd);
     if (!result.ok) return false;
     ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
+    void debugCaptureImages(`after-setImage(upload) url=${result.item.url}`, ed.getJSON());
     // Save right now — don't rely on the debounce surviving the re-renders that
     // the insert (and any follow-up alt-text edit) triggers.
     await runAutosaveRef.current();
