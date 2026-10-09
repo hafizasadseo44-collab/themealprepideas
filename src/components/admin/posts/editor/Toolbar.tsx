@@ -21,7 +21,6 @@ import {
 import LinkPopover from "@/components/admin/posts/editor/LinkPopover";
 import MediaPicker from "@/components/admin/media/MediaPicker";
 import type { MediaItem } from "@/lib/media/upload";
-import { debugCaptureImages } from "@/lib/recipes/mutations";
 
 function ToolbarButton({
   active,
@@ -102,7 +101,6 @@ export default function Toolbar({ editor }: { editor: Editor }) {
 
   const handleImageSelect = (item: MediaItem) => {
     editor.chain().focus().setImage({ src: item.url, alt: item.altText ?? "" }).run();
-    void debugCaptureImages(`after-setImage(mediapicker) url=${item.url}`, editor.getJSON());
   };
 
   return (

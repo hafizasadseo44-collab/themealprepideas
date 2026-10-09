@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/session";
 import { notifyNewRecipe } from "@/lib/email/notify";
 import type { RecipeStatus } from "@/lib/recipes/types";
@@ -93,7 +92,6 @@ async function revalidateForRecipe(slug: string, pageId: string | null) {
 
 export async function createRecipe(input: RecipeInput): Promise<ActionResult> {
   const profile = await requireRole(["admin", "editor"]);
-  await debugCaptureImages("server-received(create)", input.content);
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -119,35 +117,8 @@ export async function createRecipe(input: RecipeInput): Promise<ActionResult> {
   return { ok: true, id: data.id };
 }
 
-/** TEMP DEBUG — captures image nodes seen at a given stage into contact_messages
- * (service-role, RLS-bypassed) so we can see whether `src` survives. Remove once
- * the inline-image bug is pinned down. */
-function collectImageNodes(node: unknown, acc: unknown[] = []): unknown[] {
-  if (!node || typeof node !== "object") return acc;
-  const n = node as { type?: string; content?: unknown[] };
-  if (n.type === "image") acc.push(node);
-  if (Array.isArray(n.content)) for (const c of n.content) collectImageNodes(c, acc);
-  return acc;
-}
-
-export async function debugCaptureImages(label: string, content: unknown): Promise<void> {
-  try {
-    const imgs = collectImageNodes(content);
-    const admin = createAdminClient();
-    await admin.from("contact_messages").insert({
-      name: "__IMGDBG__",
-      email: "debug@local",
-      subject: label,
-      message: JSON.stringify({ count: imgs.length, imgs }).slice(0, 9000),
-    });
-  } catch {
-    // best-effort only
-  }
-}
-
 export async function updateRecipe(id: string, input: RecipeInput): Promise<ActionResult> {
   await requireRole(["admin", "editor"]);
-  await debugCaptureImages("server-received(update)", input.content);
   const supabase = await createClient();
 
   const { data: existing } = await supabase.from("recipes").select("status").eq("id", id).maybeSingle();
