@@ -176,16 +176,16 @@ export default function PrintableCard({
       </div>
 
       {visibleSections.notes && notes.length > 0 && (
-        <div className="mx-[1.8em] mb-[0.5em] rounded-[0.8em] border border-dashed p-[1.1em]" style={{ borderColor: t.border, backgroundColor: t.accentSoft }}>
-          <p className="mb-[0.6em] flex items-center gap-[0.4em] text-[0.7em] font-bold uppercase tracking-wide" style={{ color: t.accent }}>
-            <Lightbulb className="size-[1em]" />
-            Good to know
-          </p>
-          <ul className="flex flex-col gap-[0.4em]">
+        <div className="p-[1.8em]" style={{ borderTop: `1px solid ${t.border}` }}>
+          <h2 className="mb-[0.9em] flex items-center gap-[0.45em] font-serif text-[1.25em] font-semibold" style={{ color: t.heading }}>
+            <Lightbulb className="size-[0.9em]" style={{ color: t.accent }} />
+            Notes &amp; Tips
+          </h2>
+          <ul className="flex flex-col gap-[0.6em] rounded-[0.8em] p-[1.2em]" style={{ backgroundColor: t.accentSoft }}>
             {notes.map((n, i) => (
-              <li key={i} className="flex items-start gap-[0.5em] text-[0.9em] leading-relaxed">
-                <span className="mt-[0.5em] size-[0.3em] shrink-0 rounded-full" style={{ backgroundColor: t.accent }} />
-                {n}
+              <li key={i} className="flex items-start gap-[0.6em] text-[0.9em] leading-relaxed">
+                <span className="mt-[0.55em] size-[0.35em] shrink-0 rounded-full" style={{ backgroundColor: t.accent }} />
+                <span>{n}</span>
               </li>
             ))}
           </ul>
