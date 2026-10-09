@@ -198,7 +198,7 @@ export default async function RecipePage({
               <RecipeComments recipe={recipe} comments={comments} />
             </div>
 
-            <RecipeSidebar recipe={recipe} />
+            <RecipeSidebar recipe={recipe} related={related} />
           </div>
         </Container>
       </section>

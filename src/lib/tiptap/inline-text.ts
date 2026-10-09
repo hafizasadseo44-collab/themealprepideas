@@ -50,9 +50,23 @@ export function markdownToTextRuns(text: string): TiptapNode[] {
  * (like blob: or data: URLs) that shouldn't be loaded into the editor or saved to DB.
  */
 export function sanitizeTiptapJson(node: TiptapNode): TiptapNode {
-  if (!node.content) return node;
-  
-  const cleanedContent = node.content
+  // Normalize heading levels. A lot of imported/AI-generated content arrived as
+  // Tiptap JSON with heading nodes that have no `level` attribute — those render
+  // as H2 everywhere and, worse, show up as "Paragraph" in the editor's heading
+  // dropdown (since no specific level is active). Pin any missing/out-of-range
+  // level to 2 so the editor and the public page agree and the dropdown is
+  // usable; the author can then promote individual headings to H3–H6.
+  let normalized = node;
+  if (node.type === "heading") {
+    const level = node.attrs?.level;
+    if (typeof level !== "number" || level < 2 || level > 6) {
+      normalized = { ...node, attrs: { ...node.attrs, level: 2 } };
+    }
+  }
+
+  if (!normalized.content) return normalized;
+
+  const cleanedContent = normalized.content
     .filter((child) => {
       if (child.type === "image") {
         const src = child.attrs?.src as string | undefined;
@@ -64,5 +78,5 @@ export function sanitizeTiptapJson(node: TiptapNode): TiptapNode {
     })
     .map(sanitizeTiptapJson);
 
-  return { ...node, content: cleanedContent };
+  return { ...normalized, content: cleanedContent };
 }

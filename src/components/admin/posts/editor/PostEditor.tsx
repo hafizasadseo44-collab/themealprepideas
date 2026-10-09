@@ -79,8 +79,14 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
   const currentIdRef = useRef<string | null>(post?.id ?? null);
   useEffect(() => { currentIdRef.current = currentId; }, [currentId]);
 
+  // Always points at the latest runAutosave so the autosave timers can call it
+  // without depending on its identity — otherwise every keystroke would reset
+  // the debounce/interval and could cancel a save scheduled right after an
+  // image insert (which is why inserted images were never persisted).
+  const runAutosaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
+
   /** Upload a raw File to Supabase and insert into the editor as a
-   * persistent image node (never a blob: URL). */
+   * persistent image node (never a blob: URL), then persist immediately. */
   const uploadAndInsertImage = useCallback(async (file: File): Promise<boolean> => {
     const ed = editorRef.current;
     if (!ed || !file.type.startsWith("image/")) return false;
@@ -89,6 +95,7 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
     const result = await uploadImage(fd);
     if (!result.ok) return false;
     ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
+    await runAutosaveRef.current();
     return true;
   }, []);
 
@@ -242,24 +249,32 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
     pendingAutosaveRef.current = false;
   }, [title, buildInput]);
 
-  // Fallback interval autosave.
+  // Keep the ref current so the timers call the latest runAutosave by reference.
   useEffect(() => {
-    const interval = setInterval(() => { runAutosave(); }, AUTOSAVE_INTERVAL_MS);
-    return () => clearInterval(interval);
+    runAutosaveRef.current = runAutosave;
   }, [runAutosave]);
 
+  // Fallback interval autosave. Empty deps so it is never torn down by unrelated
+  // re-renders; it always invokes the newest runAutosave through the ref.
+  useEffect(() => {
+    const interval = setInterval(() => { runAutosaveRef.current(); }, AUTOSAVE_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, []);
+
   // Debounced save fires 1.5 s after any editor change (catches image inserts).
+  // Depends only on `editor` so an unrelated field change can't clear a pending
+  // save.
   useEffect(() => {
     if (!editor) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const onUpdate = () => {
       pendingAutosaveRef.current = true;
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => { if (pendingAutosaveRef.current) runAutosave(); }, 1500);
+      timer = setTimeout(() => { if (pendingAutosaveRef.current) runAutosaveRef.current(); }, 1500);
     };
     editor.on("update", onUpdate);
     return () => { editor.off("update", onUpdate); if (timer) clearTimeout(timer); };
-  }, [editor, runAutosave]);
+  }, [editor]);
 
   // Tick the "Saved Xs ago" label forward every few seconds.
   useEffect(() => {

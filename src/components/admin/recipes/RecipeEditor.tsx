@@ -114,8 +114,18 @@ export default function RecipeEditor({
   // (paste/drop upload) can access it without stale closures.
   const editorRef = useRef<ReturnType<typeof useEditor>>(null);
 
+  // Always points at the latest runAutosave. The autosave timers below read
+  // through this ref instead of depending on runAutosave directly — otherwise
+  // every keystroke (which changes buildInput → runAutosave's identity) would
+  // tear down and recreate the debounce/interval effects, clearing their
+  // pending timers and canceling an in-flight autosave. That race is exactly
+  // why freshly-inserted images never made it to the DB: the save scheduled
+  // right after an image insert was cleared by the next unrelated re-render.
+  const runAutosaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
+
   /** Upload a raw File to Supabase and insert it into the editor as a
-   * persistent image node. */
+   * persistent image node, then persist it immediately so a quick refresh or
+   * navigation can't lose it. */
   const uploadAndInsertImage = useCallback(async (file: File): Promise<boolean> => {
     const ed = editorRef.current;
     if (!ed || !file.type.startsWith("image/")) return false;
@@ -124,6 +134,9 @@ export default function RecipeEditor({
     const result = await uploadImage(fd);
     if (!result.ok) return false;
     ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
+    // Save right now — don't rely on the debounce surviving the re-renders that
+    // the insert (and any follow-up alt-text edit) triggers.
+    await runAutosaveRef.current();
     return true;
   }, []);
 
@@ -318,17 +331,28 @@ export default function RecipeEditor({
     pendingAutosaveRef.current = false;
   }, [title, buildInput]);
 
+  // Keep the ref pointing at the latest runAutosave so the timers below can
+  // call it without listing it as a dependency (which would reset them on
+  // every render — see runAutosaveRef's declaration).
+  useEffect(() => {
+    runAutosaveRef.current = runAutosave;
+  }, [runAutosave]);
+
   // Silent background autosave — never changes the recipe's live/published
   // status, only persists content so nothing is lost if the browser closes.
+  // Deps are empty so the interval is created once and never torn down by
+  // unrelated re-renders; it always calls the newest runAutosave via the ref.
   useEffect(() => {
     const interval = setInterval(() => {
-      runAutosave();
+      runAutosaveRef.current();
     }, AUTOSAVE_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [runAutosave]);
+  }, []);
 
   // Debounced immediate save — fires ~1.5 s after any editor change so that
   // inserted images (and other edits) are persisted well before a page refresh.
+  // Depends only on `editor` (stable for the editor's lifetime), so a pending
+  // debounce is never cleared just because another field changed.
   useEffect(() => {
     if (!editor) return;
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -336,7 +360,7 @@ export default function RecipeEditor({
       pendingAutosaveRef.current = true;
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
-        if (pendingAutosaveRef.current) runAutosave();
+        if (pendingAutosaveRef.current) runAutosaveRef.current();
       }, 1500);
     };
     editor.on("update", handleUpdate);
@@ -344,7 +368,7 @@ export default function RecipeEditor({
       editor.off("update", handleUpdate);
       if (debounceTimer) clearTimeout(debounceTimer);
     };
-  }, [editor, runAutosave]);
+  }, [editor]);
 
   useEffect(() => {
     if (!lastSavedAt) return;
