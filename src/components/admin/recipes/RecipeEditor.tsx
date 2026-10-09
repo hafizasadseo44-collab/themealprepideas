@@ -23,7 +23,7 @@ import SelectionMenu from "@/components/admin/posts/editor/SelectionMenu";
 import SeoPanel, { type SeoState } from "@/components/admin/posts/editor/SeoPanel";
 import MediaPicker from "@/components/admin/media/MediaPicker";
 import Switch from "@/components/ui/Switch";
-import { createRecipe, updateRecipe, type RecipeInput } from "@/lib/recipes/mutations";
+import { createRecipe, updateRecipe, debugCaptureImages, type RecipeInput } from "@/lib/recipes/mutations";
 import { slugify, type Recipe, type RecipePage, type RecipeStatus } from "@/lib/recipes/types";
 import { sanitizeTiptapJson, type TiptapNode } from "@/lib/tiptap/inline-text";
 import { uploadImage, type MediaItem } from "@/lib/media/upload";
@@ -315,6 +315,8 @@ export default function RecipeEditor({
     const input = buildInput(savedStatusRef.current);
     if (!input) return;
 
+    void debugCaptureImages("client-getJSON(autosave)", input.content);
+
     autosaveInProgressRef.current = true;
     setAutosaveStatus("saving");
     const result = currentIdRef.current
@@ -387,6 +389,8 @@ export default function RecipeEditor({
 
     const input = buildInput(status);
     if (!input) return setError("Slug is required.");
+
+    void debugCaptureImages("client-getJSON(update-btn)", input.content);
 
     setSaving(true);
     const result = currentId ? await updateRecipe(currentId, input) : await createRecipe(input);
