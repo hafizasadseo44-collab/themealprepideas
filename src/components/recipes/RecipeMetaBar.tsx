@@ -6,7 +6,7 @@ import {
   Clock,
   ChefHat,
   Users,
-  ArrowDown,
+  Printer,
   ClipboardList,
   ListOrdered,
   Archive,
@@ -99,11 +99,13 @@ export default function RecipeMetaBar({
 
           {hasContent && (
             <a
-              href="#recipe-content"
+              href={`/recipes/${recipe.slug}/print`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-primary px-4 py-2 text-xs font-semibold text-white shadow-[0_10px_24px_-10px_rgba(63,163,77,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-primary-dark"
             >
-              Jump to Recipe
-              <ArrowDown className="size-3.5" />
+              <Printer className="size-3.5" />
+              Recipe PDF
             </a>
           )}
         </motion.div>

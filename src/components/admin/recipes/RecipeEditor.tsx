@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEditor, EditorContent, type JSONContent } from "@tiptap/react";
@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   Sparkles,
 } from "lucide-react";
-import { editorExtensions } from "@/lib/tiptap/extensions";
+import { createEditorExtensions } from "@/lib/tiptap/extensions";
 import Toolbar from "@/components/admin/posts/editor/Toolbar";
 import SelectionMenu from "@/components/admin/posts/editor/SelectionMenu";
 import SeoPanel, { type SeoState } from "@/components/admin/posts/editor/SeoPanel";
@@ -140,8 +140,12 @@ export default function RecipeEditor({
     return true;
   }, []);
 
+  // Fresh extension instances for THIS editor only (never shared) — see
+  // createEditorExtensions() for why sharing breaks image attributes.
+  const extensions = useMemo(() => createEditorExtensions(), []);
+
   const editor = useEditor({
-    extensions: editorExtensions,
+    extensions,
     content: sanitizeTiptapJson((recipe?.contentJson as TiptapNode) ?? { type: "doc", content: [{ type: "paragraph" }] }) as JSONContent,
     immediatelyRender: false,
     editorProps: {

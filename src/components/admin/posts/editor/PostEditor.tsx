@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useEditor, EditorContent, type JSONContent } from "@tiptap/react";
 import { NodeSelection } from "@tiptap/pm/state";
 import { Save, Loader2, ImagePlus, X, AlertCircle, Settings2, CloudCheck, CloudOff, ImageIcon, AlertTriangle } from "lucide-react";
-import { editorExtensions } from "@/lib/tiptap/extensions";
+import { createEditorExtensions } from "@/lib/tiptap/extensions";
 import Toolbar from "@/components/admin/posts/editor/Toolbar";
 import SelectionMenu from "@/components/admin/posts/editor/SelectionMenu";
 import SeoPanel, { type SeoState } from "@/components/admin/posts/editor/SeoPanel";
@@ -99,8 +99,10 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
     return true;
   }, []);
 
+  const extensions = useMemo(() => createEditorExtensions(), []);
+
   const editor = useEditor({
-    extensions: editorExtensions,
+    extensions,
     content: sanitizeTiptapJson((post?.contentJson as TiptapNode) ?? { type: "doc", content: [{ type: "paragraph" }] }) as JSONContent,
     immediatelyRender: false,
     editorProps: {
