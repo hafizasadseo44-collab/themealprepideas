@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Lightbulb, AlertTriangle, Info, Quote } from "lucide-react";
 import { slugifyHeading, type ContentBlock } from "@/data/blog";
@@ -220,10 +219,18 @@ export default function ArticleContent({ content }: { content: ContentBlock[] })
 
           case "image":
             return (
-              <motion.figure {...fadeUp} key={i} className="my-2">
-                <div className="relative h-56 w-full overflow-hidden rounded-[18px] sm:h-72 md:h-80">
-                  <Image src={block.src} alt={block.alt} fill sizes="720px" className="object-cover" />
-                </div>
+              <motion.figure {...fadeUp} key={i} className="my-4">
+                {/* Plain <img> at natural aspect ratio: content images are any
+                    shape (tall infographics, wide photos) and must never be
+                    cropped. It also loads straight from storage, sidestepping
+                    the Next/Image optimizer (which 400s on some uploads). */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={block.src}
+                  alt={block.alt}
+                  loading="lazy"
+                  className="h-auto w-full rounded-[18px]"
+                />
                 {block.caption && (
                   <figcaption className="mt-2.5 text-center text-sm text-brand-light">{block.caption}</figcaption>
                 )}
