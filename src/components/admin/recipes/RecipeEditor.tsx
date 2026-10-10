@@ -264,7 +264,12 @@ export default function RecipeEditor({
         totalTimeMinutes: totalManual ?? (prep != null || cook != null ? (prep ?? 0) + (cook ?? 0) : null),
         servings: numberOrNull(servings),
         servingsLabel: servingsLabel.trim() || null,
-        content: editor.getJSON() as TiptapNode,
+        // Deep-clone to a plain object. Passed straight from editor.getJSON(),
+        // the image node's `attrs` gets encoded as a React Flight reference
+        // ("$T") across the Server Action boundary and arrives empty on the
+        // server — which dropped every inserted image's src. A JSON round-trip
+        // forces plain, fully-serializable data.
+        content: JSON.parse(JSON.stringify(editor.getJSON())) as TiptapNode,
         calories: numberOrNull(calories),
         proteinGrams: numberOrNull(protein),
         carbsGrams: numberOrNull(carbs),

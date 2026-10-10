@@ -218,7 +218,10 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
         tags,
         trending,
         featured,
-        content: editor.getJSON() as TiptapNode,
+        // Plain-clone so the image node's attrs survive the Server Action
+        // boundary (otherwise Flight encodes them as a "$T" reference that
+        // arrives empty, dropping the image src).
+        content: JSON.parse(JSON.stringify(editor.getJSON())) as TiptapNode,
         minutes,
         seoTitle: seo.seoTitle || null,
         seoDescription: seo.seoDescription || null,
