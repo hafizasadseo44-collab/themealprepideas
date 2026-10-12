@@ -12,18 +12,17 @@ const nextConfig: NextConfig = {
     ? { distDir: "/Users/hafizasadseo/.next-cache/themealprepideas" }
     : {}),
   images: {
+    // Serve images directly from their source instead of running them through
+    // Next.js's on-demand image optimizer. On this shared Hostinger Node plan
+    // the optimizer (generating multiple sizes/formats per image as crawlers
+    // hit many recipe pages) spiked CPU/memory and kept taking the server down
+    // (nginx 504). Source images are already reasonably sized webp/png, so
+    // unoptimized delivery trades a little bandwidth for a stable server.
+    unoptimized: true,
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
-      },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
     ],
-    formats: ["image/avif", "image/webp"],
   },
   experimental: {
     serverActions: {
