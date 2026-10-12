@@ -20,18 +20,28 @@ export function textRunsToMarkdown(nodes: TiptapNode[] | undefined): string {
       const text = node.text ?? "";
       const hasBold = node.marks?.some((m) => m.type === "bold");
       const hasItalic = node.marks?.some((m) => m.type === "italic");
-      if (hasBold && hasItalic) return `***${text}***`;
-      if (hasBold) return `**${text}**`;
-      if (hasItalic) return `*${text}*`;
-      return text;
+      let out = text;
+      if (hasBold && hasItalic) out = `***${text}***`;
+      else if (hasBold) out = `**${text}**`;
+      else if (hasItalic) out = `*${text}*`;
+      // Preserve link marks as markdown so ArticleContent can render a real
+      // <a>. Without this the href was dropped and only plain text showed.
+      const href = node.marks?.find((m) => m.type === "link")?.attrs?.href as string | undefined;
+      if (href) out = `[${out}](${href})`;
+      return out;
     })
     .join("");
 }
 
 /** The reverse of textRunsToMarkdown() — used when seeding/importing content into Tiptap JSON. */
 export function markdownToTextRuns(text: string): TiptapNode[] {
-  const parts = text.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
-  return parts.map((part) => {
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\)|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
+  return parts.map((part): TiptapNode => {
+    const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (link) {
+      const inner = markdownToTextRuns(link[1])[0] ?? { type: "text", text: link[1] };
+      return { ...inner, marks: [...(inner.marks ?? []), { type: "link", attrs: { href: link[2] } }] };
+    }
     if (part.startsWith("***") && part.endsWith("***")) {
       return { type: "text", text: part.slice(3, -3), marks: [{ type: "bold" }, { type: "italic" }] };
     }

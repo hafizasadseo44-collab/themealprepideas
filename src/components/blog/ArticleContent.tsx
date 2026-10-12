@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Lightbulb, AlertTriangle, Info, Quote } from "lucide-react";
 import { slugifyHeading, type ContentBlock } from "@/data/blog";
@@ -17,7 +18,7 @@ const fadeUp = {
   transition: { duration: 0.5, ease: "easeOut" as const },
 };
 
-function renderInline(text: string, keyPrefix: string) {
+function renderFormatting(text: string, keyPrefix: string) {
   const parts = text.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
   return parts.map((part, i) => {
     if (part.startsWith("***") && part.endsWith("***")) {
@@ -39,6 +40,41 @@ function renderInline(text: string, keyPrefix: string) {
     }
     return <span key={`${keyPrefix}-${i}`}>{part}</span>;
   });
+}
+
+/** Make an author-entered href usable as a real URL: keep relative/anchor/
+ * mailto/tel as-is, and prepend https:// to a bare domain like "example.com/x". */
+function normalizeHref(href: string): string {
+  const h = href.trim();
+  if (/^(\/|#|https?:\/\/|mailto:|tel:)/i.test(h)) return h;
+  return `https://${h}`;
+}
+
+function renderInline(text: string, keyPrefix: string) {
+  const LINK = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const out: ReactNode[] = [];
+  let last = 0;
+  let idx = 0;
+  let m: RegExpExecArray | null;
+  while ((m = LINK.exec(text)) !== null) {
+    if (m.index > last) out.push(...renderFormatting(text.slice(last, m.index), `${keyPrefix}-t${idx}`));
+    const href = normalizeHref(m[2]);
+    const isExternal = /^https?:\/\//i.test(href) && !/(^|\/\/|\.)themealprepideas\.com/i.test(href);
+    out.push(
+      <a
+        key={`${keyPrefix}-a${idx}`}
+        href={href}
+        className="font-medium text-brand-primary-dark underline decoration-brand-primary/40 underline-offset-2 transition-colors hover:text-brand-primary hover:decoration-brand-primary"
+        {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      >
+        {renderFormatting(m[1], `${keyPrefix}-l${idx}`)}
+      </a>
+    );
+    last = m.index + m[0].length;
+    idx++;
+  }
+  if (last < text.length) out.push(...renderFormatting(text.slice(last), `${keyPrefix}-t${idx}`));
+  return out;
 }
 
 export default function ArticleContent({ content }: { content: ContentBlock[] }) {

@@ -75,7 +75,11 @@ function isHeadingBlock(b: ContentBlock): b is Extract<ContentBlock, { type: Hea
 /** Strips inline bold/italic markdown syntax for contexts (TOC labels,
  * extracted structured data) that show plain text rather than rendering it. */
 export function stripMarkdown(text: string): string {
-  return text.replace(/\*\*\*([^*]+)\*\*\*/g, "$1").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\*([^*]+)\*/g, "$1");
+  return text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\*\*\*([^*]+)\*\*\*/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1");
 }
 
 export function getHeadings(content: ContentBlock[]): Heading[] {
