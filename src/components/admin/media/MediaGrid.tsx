@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Upload, Loader2, Trash2, Check, Pencil, ImageOff } from "lucide-react";
 import { uploadImage, type MediaItem } from "@/lib/media/upload";
+import { optimizeImageBeforeUpload } from "@/lib/media/client-compress";
 import { updateMediaAlt, deleteMedia } from "@/lib/media/mutations";
 
 function MediaCard({ item, onDeleted }: { item: MediaItem; onDeleted: (id: string) => void }) {
@@ -86,12 +87,18 @@ export default function MediaGrid({ items: initialItems }: { items: MediaItem[] 
 
   const handleUpload = async (file: File) => {
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    const result = await uploadImage(formData);
-    setUploading(false);
-    if (result.ok) setItems((prev) => [result.item, ...prev]);
-    else alert(result.error);
+    try {
+      const optimized = await optimizeImageBeforeUpload(file);
+      const formData = new FormData();
+      formData.append("file", optimized);
+      const result = await uploadImage(formData);
+      setUploading(false);
+      if (result.ok) setItems((prev) => [result.item, ...prev]);
+      else alert(result.error);
+    } catch (err: unknown) {
+      setUploading(false);
+      alert(err instanceof Error ? err.message : "Upload failed.");
+    }
   };
 
   return (

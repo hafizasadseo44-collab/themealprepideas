@@ -22,17 +22,24 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
   const altText = String(formData.get("altText") ?? "");
   if (!(file instanceof File)) return { ok: false, error: "No file provided." };
   if (!file.type.startsWith("image/")) return { ok: false, error: "Only image files are allowed." };
-  if (file.size > 5 * 1024 * 1024) return { ok: false, error: "Image must be under 5MB." };
+  if (file.size > 10 * 1024 * 1024) return { ok: false, error: "Image must be under 10MB." };
 
   const supabase = await createClient();
-  const ext = file.name.split(".").pop() || "jpg";
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const path = `${randomUUID()}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage.from("media").upload(path, file, {
-    contentType: file.type,
+  // Convert File to Buffer for reliable server-side upload in Node.js
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  const { error: uploadError } = await supabase.storage.from("media").upload(path, buffer, {
+    contentType: file.type || "image/jpeg",
     upsert: false,
   });
-  if (uploadError) return { ok: false, error: uploadError.message };
+  if (uploadError) {
+    console.error("[uploadImage] Storage upload error:", uploadError.message);
+    return { ok: false, error: uploadError.message };
+  }
 
   const { data: publicUrl } = supabase.storage.from("media").getPublicUrl(path);
 
@@ -48,7 +55,10 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
     .select("id, url, storage_path, alt_text, created_at")
     .single();
 
-  if (error || !data) return { ok: false, error: error?.message ?? "Upload succeeded but saving to the library failed." };
+  if (error || !data) {
+    console.error("[uploadImage] DB insert error:", error?.message);
+    return { ok: false, error: error?.message ?? "Upload succeeded but saving to the library failed." };
+  }
 
   revalidatePath("/admin/media");
   return {

@@ -17,6 +17,7 @@ import { slugify } from "@/lib/posts/types";
 import type { BlogPost, Category, PostStatus } from "@/lib/posts/types";
 import { sanitizeTiptapJson, type TiptapNode } from "@/lib/tiptap/inline-text";
 import { uploadImage, type MediaItem } from "@/lib/media/upload";
+import { optimizeImageBeforeUpload } from "@/lib/media/client-compress";
 
 const statusOptions: { value: PostStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
@@ -24,7 +25,7 @@ const statusOptions: { value: PostStatus; label: string }[] = [
   { value: "scheduled", label: "Scheduled" },
 ];
 
-const AUTOSAVE_INTERVAL_MS = 5000; // 5 s fallback; debounced save fires in 1.5 s after any edit
+const AUTOSAVE_INTERVAL_MS = 20000; // 20 s fallback; debounced save fires in 1.5 s after any edit
 
 function timeAgo(date: Date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -90,13 +91,22 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
   const uploadAndInsertImage = useCallback(async (file: File): Promise<boolean> => {
     const ed = editorRef.current;
     if (!ed || !file.type.startsWith("image/")) return false;
-    const fd = new FormData();
-    fd.append("file", file);
-    const result = await uploadImage(fd);
-    if (!result.ok) return false;
-    ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
-    await runAutosaveRef.current();
-    return true;
+    try {
+      const optimized = await optimizeImageBeforeUpload(file);
+      const fd = new FormData();
+      fd.append("file", optimized);
+      const result = await uploadImage(fd);
+      if (!result.ok) {
+        setError(result.error);
+        return false;
+      }
+      ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
+      await runAutosaveRef.current();
+      return true;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to upload image.");
+      return false;
+    }
   }, []);
 
   const extensions = useMemo(() => createEditorExtensions(), []);
@@ -244,8 +254,8 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
     autosaveInProgressRef.current = true;
     setAutosaveStatus("saving");
     const result = currentIdRef.current
-      ? await updatePost(currentIdRef.current, input)
-      : await createPost(input);
+      ? await updatePost(currentIdRef.current, input, true)
+      : await createPost(input, true);
     autosaveInProgressRef.current = false;
     if (!result.ok) { setAutosaveStatus("error"); return; }
     if (!currentIdRef.current) { currentIdRef.current = result.id; setCurrentId(result.id); }
@@ -297,7 +307,7 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
     if (!input) return setError("Slug is required.");
 
     setSaving(true);
-    const result = currentId ? await updatePost(currentId, input) : await createPost(input);
+    const result = currentId ? await updatePost(currentId, input, false) : await createPost(input, false);
     setSaving(false);
 
     if (!result.ok) return setError(result.error);

@@ -66,7 +66,7 @@ function toRow(input: PostInput, authorId?: string) {
   };
 }
 
-export async function createPost(input: PostInput): Promise<ActionResult> {
+export async function createPost(input: PostInput, isAutosave?: boolean): Promise<ActionResult> {
   const profile = await requireRole(["admin", "editor"]);
   const supabase = await createClient();
 
@@ -82,10 +82,14 @@ export async function createPost(input: PostInput): Promise<ActionResult> {
 
   if (error || !data) return { ok: false, error: error?.message ?? "Could not create post." };
 
-  revalidatePath("/blog");
-  revalidatePath(`/blog/${input.slug}`);
-  revalidatePath("/admin/posts");
-  revalidatePath("/sitemap.xml");
+  if (!isAutosave) {
+    revalidatePath("/admin/posts");
+    if (input.status === "published") {
+      revalidatePath("/blog");
+      revalidatePath(`/blog/${input.slug}`);
+      revalidatePath("/sitemap.xml");
+    }
+  }
 
   if (input.status === "published") {
     notifyOfPublishedPost(input).catch((err) => console.error("[email] notifyNewPost failed:", err));
@@ -94,7 +98,7 @@ export async function createPost(input: PostInput): Promise<ActionResult> {
   return { ok: true, id: data.id };
 }
 
-export async function updatePost(id: string, input: PostInput): Promise<ActionResult> {
+export async function updatePost(id: string, input: PostInput, isAutosave?: boolean): Promise<ActionResult> {
   await requireRole(["admin", "editor"]);
   const supabase = await createClient();
 
@@ -108,10 +112,14 @@ export async function updatePost(id: string, input: PostInput): Promise<ActionRe
   const { error } = await supabase.from("posts").update(toRow(input)).eq("id", id);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/blog");
-  revalidatePath(`/blog/${input.slug}`);
-  revalidatePath("/admin/posts");
-  revalidatePath("/sitemap.xml");
+  if (!isAutosave) {
+    revalidatePath("/admin/posts");
+    if (wasPublished || input.status === "published") {
+      revalidatePath("/blog");
+      revalidatePath(`/blog/${input.slug}`);
+      revalidatePath("/sitemap.xml");
+    }
+  }
 
   if (!wasPublished && input.status === "published") {
     notifyOfPublishedPost(input).catch((err) => console.error("[email] notifyNewPost failed:", err));

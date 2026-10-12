@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { X, Upload, Loader2, ImageOff } from "lucide-react";
 import { uploadImage, listMedia, type MediaItem } from "@/lib/media/upload";
+import { optimizeImageBeforeUpload } from "@/lib/media/client-compress";
 
 export default function MediaPicker({
   open,
@@ -39,15 +40,24 @@ export default function MediaPicker({
   const handleUpload = async (file: File) => {
     setError(null);
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    const result = await uploadImage(formData);
-    setUploading(false);
+    try {
+      const optimized = await optimizeImageBeforeUpload(file);
+      const formData = new FormData();
+      formData.append("file", optimized);
+      const result = await uploadImage(formData);
+      setUploading(false);
 
-    if (!result.ok) return setError(result.error);
-    setItems((prev) => [result.item, ...prev]);
-    onSelect(result.item);
-    onClose();
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setItems((prev) => [result.item, ...prev]);
+      onSelect(result.item);
+      onClose();
+    } catch (err: unknown) {
+      setUploading(false);
+      setError(err instanceof Error ? err.message : "Failed to upload image.");
+    }
   };
 
   return (

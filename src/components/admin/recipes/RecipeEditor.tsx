@@ -27,13 +27,14 @@ import { createRecipe, updateRecipe, type RecipeInput } from "@/lib/recipes/muta
 import { slugify, type Recipe, type RecipePage, type RecipeStatus } from "@/lib/recipes/types";
 import { sanitizeTiptapJson, type TiptapNode } from "@/lib/tiptap/inline-text";
 import { uploadImage, type MediaItem } from "@/lib/media/upload";
+import { optimizeImageBeforeUpload } from "@/lib/media/client-compress";
 
 const statusOptions: { value: RecipeStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
   { value: "published", label: "Published" },
 ];
 
-const AUTOSAVE_INTERVAL_MS = 5000; // 5 s — fast enough that a page refresh won't lose recent edits
+const AUTOSAVE_INTERVAL_MS = 20000; // 20 s — avoids flooding the server while editing
 
 function timeAgo(date: Date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -129,15 +130,22 @@ export default function RecipeEditor({
   const uploadAndInsertImage = useCallback(async (file: File): Promise<boolean> => {
     const ed = editorRef.current;
     if (!ed || !file.type.startsWith("image/")) return false;
-    const fd = new FormData();
-    fd.append("file", file);
-    const result = await uploadImage(fd);
-    if (!result.ok) return false;
-    ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
-    // Save right now — don't rely on the debounce surviving the re-renders that
-    // the insert (and any follow-up alt-text edit) triggers.
-    await runAutosaveRef.current();
-    return true;
+    try {
+      const optimized = await optimizeImageBeforeUpload(file);
+      const fd = new FormData();
+      fd.append("file", optimized);
+      const result = await uploadImage(fd);
+      if (!result.ok) {
+        setError(result.error);
+        return false;
+      }
+      ed.chain().focus().setImage({ src: result.item.url, alt: result.item.altText ?? "" }).run();
+      await runAutosaveRef.current();
+      return true;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to upload image.");
+      return false;
+    }
   }, []);
 
   // Fresh extension instances for THIS editor only (never shared) — see
@@ -323,8 +331,8 @@ export default function RecipeEditor({
     autosaveInProgressRef.current = true;
     setAutosaveStatus("saving");
     const result = currentIdRef.current
-      ? await updateRecipe(currentIdRef.current, input)
-      : await createRecipe(input);
+      ? await updateRecipe(currentIdRef.current, input, true)
+      : await createRecipe(input, true);
     autosaveInProgressRef.current = false;
 
     if (!result.ok) {
@@ -394,7 +402,7 @@ export default function RecipeEditor({
     if (!input) return setError("Slug is required.");
 
     setSaving(true);
-    const result = currentId ? await updateRecipe(currentId, input) : await createRecipe(input);
+    const result = currentId ? await updateRecipe(currentId, input, false) : await createRecipe(input, false);
     setSaving(false);
 
     if (!result.ok) return setError(result.error);
