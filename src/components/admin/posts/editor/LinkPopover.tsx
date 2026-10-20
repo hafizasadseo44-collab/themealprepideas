@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Editor } from "@tiptap/react";
-import { Link2, X } from "lucide-react";
+import { Link2, X, ChefHat, FileText } from "lucide-react";
+import { searchContent, type ContentSuggestion } from "@/lib/search/content-search";
 
 type RelType = "dofollow" | "nofollow" | "sponsored" | "ugc";
 
@@ -21,14 +22,40 @@ function relToType(rel: string | undefined): RelType {
   return "dofollow";
 }
 
+function isExternalUrl(val: string) {
+  return /^(https?:\/\/|mailto:|tel:|\/\/)/i.test(val.trim());
+}
+
 export default function LinkPopover({ editor, onClose }: { editor: Editor; onClose: () => void }) {
   const existing = editor.getAttributes("link") as { href?: string; target?: string; rel?: string };
   const [url, setUrl] = useState(existing.href ?? "");
   const [newTab, setNewTab] = useState(existing.target === "_blank");
   const [relType, setRelType] = useState<RelType>(relToType(existing.rel));
+  const [suggestions, setSuggestions] = useState<ContentSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const apply = () => {
-    if (!url.trim()) {
+  useEffect(() => {
+    if (isExternalUrl(url) || url.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchContent(url.trim());
+      setSuggestions(results);
+      setShowSuggestions(results.length > 0);
+      setActiveSuggestion(-1);
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [url]);
+
+  const apply = (overrideUrl?: string) => {
+    const href = overrideUrl ?? url.trim();
+    setShowSuggestions(false);
+    if (!href) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       onClose();
       return;
@@ -41,14 +68,46 @@ export default function LinkPopover({ editor, onClose }: { editor: Editor; onClo
       .chain()
       .focus()
       .extendMarkRange("link")
-      .setLink({ href: url.trim(), target: newTab ? "_blank" : null, rel: rel.length ? rel.join(" ") : null })
+      .setLink({ href, target: newTab ? "_blank" : null, rel: rel.length ? rel.join(" ") : null })
       .run();
     onClose();
+  };
+
+  const pickSuggestion = (s: ContentSuggestion) => {
+    setUrl(s.url);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    apply(s.url);
   };
 
   const remove = () => {
     editor.chain().focus().extendMarkRange("link").unsetLink().run();
     onClose();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showSuggestions && suggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveSuggestion((i) => Math.min(i + 1, suggestions.length - 1));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveSuggestion((i) => Math.max(i - 1, -1));
+        return;
+      }
+      if (e.key === "Enter" && activeSuggestion >= 0) {
+        e.preventDefault();
+        pickSuggestion(suggestions[activeSuggestion]);
+        return;
+      }
+      if (e.key === "Escape") {
+        setShowSuggestions(false);
+        return;
+      }
+    }
+    if (e.key === "Enter") apply();
   };
 
   return (
@@ -65,17 +124,42 @@ export default function LinkPopover({ editor, onClose }: { editor: Editor; onClo
           </button>
         </div>
 
-        <input
-          autoFocus
-          type="text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") apply();
-          }}
-          placeholder="https://example.com"
-          className="mt-3 h-10 w-full rounded-[10px] border border-brand-border px-3 text-sm focus:border-brand-primary focus:outline-none"
-        />
+        <div className="relative mt-3">
+          <input
+            autoFocus
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="https://… or type a recipe/blog name"
+            className="h-10 w-full rounded-[10px] border border-brand-border px-3 text-sm focus:border-brand-primary focus:outline-none"
+          />
+
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute left-0 top-full z-40 mt-1 w-full overflow-hidden rounded-[12px] border border-brand-border/60 bg-white shadow-[0_8px_24px_-8px_rgba(17,24,39,0.18)]">
+              {suggestions.map((s, i) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); pickSuggestion(s); }}
+                  className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors ${
+                    i === activeSuggestion ? "bg-brand-primary/8 text-brand-primary-dark" : "text-brand-body hover:bg-brand-gray"
+                  }`}
+                >
+                  {s.type === "recipe" ? (
+                    <ChefHat className="size-3.5 shrink-0 text-brand-orange-deep" />
+                  ) : (
+                    <FileText className="size-3.5 shrink-0 text-brand-primary" />
+                  )}
+                  <span className="flex-1 truncate">{s.title}</span>
+                  <span className="shrink-0 rounded-full bg-brand-gray px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand-light">
+                    {s.type}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <label className="mt-3 flex items-center gap-2 text-sm text-brand-body">
           <input type="checkbox" checked={newTab} onChange={(e) => setNewTab(e.target.checked)} className="size-4 accent-brand-primary" />
@@ -104,7 +188,7 @@ export default function LinkPopover({ editor, onClose }: { editor: Editor; onClo
         <div className="mt-4 flex gap-2">
           <button
             type="button"
-            onClick={apply}
+            onClick={() => apply()}
             className="flex-1 rounded-[10px] bg-brand-primary py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
           >
             Apply
