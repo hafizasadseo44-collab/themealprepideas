@@ -8,12 +8,18 @@ import {
 } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Newsletter from "@/components/home/Newsletter";
-import { getAuthorById, getPublishedRecipesByAuthor } from "@/lib/recipes/queries";
+import { getAuthorById, getPublishedRecipesByAuthor, getAllAuthorIds } from "@/lib/recipes/queries";
 import { getPublishedPostsByAuthor } from "@/lib/posts/queries";
 import type { AuthorProfile } from "@/lib/recipes/queries";
 import AuthorContent from "./AuthorContent";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const ids = await getAllAuthorIds();
+  return ids.map((id) => ({ id }));
+}
 
 const SITE_URL = "https://themealprepideas.com";
 

@@ -156,6 +156,17 @@ export default async function RecipePage({
       : {}),
   };
 
+  const speakableSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: recipe.title,
+    url: canonicalUrl,
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["h1", ".recipe-description", ".recipe-ingredients"],
+    },
+  };
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -177,6 +188,7 @@ export default async function RecipePage({
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(recipeSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }} />
 
       <RecipeHero recipe={recipe} />
       <RecipeMetaBar recipe={recipe} hasContent={hasContent} headings={headingsWithReviews} />

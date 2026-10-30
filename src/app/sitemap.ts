@@ -13,11 +13,12 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [recipes, posts, pages] = await Promise.all([getSitemapRecipes(), getSitemapPosts(), getRecipePages()]);
 
+  const now = new Date().toISOString();
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
-    { url: `${SITE_URL}/recipes`, changeFrequency: "daily", priority: 0.9 },
-    { url: `${SITE_URL}/categories`, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${SITE_URL}/blog`, changeFrequency: "daily", priority: 0.8 },
+    { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1, lastModified: now },
+    { url: `${SITE_URL}/recipes`, changeFrequency: "daily", priority: 0.9, lastModified: now },
+    { url: `${SITE_URL}/categories`, changeFrequency: "weekly", priority: 0.8, lastModified: now },
+    { url: `${SITE_URL}/blog`, changeFrequency: "daily", priority: 0.8, lastModified: now },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/contact`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/privacy-policy`, changeFrequency: "yearly", priority: 0.3 },

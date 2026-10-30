@@ -8,6 +8,19 @@ export const metadata: Metadata = {
   title: "Contact Us | The Meal Prep Ideas",
   description:
     "Have a question, recipe request, or feedback? Get in touch with The Meal Prep Ideas — we read and reply to every message.",
+  alternates: { canonical: "https://themealprepideas.com/contact" },
+  openGraph: {
+    title: "Contact Us | The Meal Prep Ideas",
+    description: "Have a question, recipe request, or feedback? Get in touch — we read and reply to every message.",
+    type: "website",
+    siteName: "The Meal Prep Ideas",
+    url: "https://themealprepideas.com/contact",
+  },
+  twitter: {
+    card: "summary",
+    title: "Contact Us | The Meal Prep Ideas",
+    description: "Have a question or feedback? Get in touch with The Meal Prep Ideas.",
+  },
 };
 
 export default function ContactPage() {

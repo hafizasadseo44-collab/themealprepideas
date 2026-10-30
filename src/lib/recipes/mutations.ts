@@ -90,6 +90,9 @@ async function revalidateForRecipe(slug: string, pageId: string | null, isPublis
   }
   if (isPublished) {
     revalidatePath(`/recipes/${slug}`);
+    revalidatePath("/recipes");
+    revalidatePath("/");
+    revalidatePath("/categories");
     revalidatePath("/sitemap.xml");
   }
 }
