@@ -76,6 +76,18 @@ export async function removeUser(id: string): Promise<UserActionResult> {
   return { ok: true };
 }
 
+export async function resendInvite(email: string): Promise<UserActionResult> {
+  await requireRole(["admin"]);
+  const adminClient = createAdminClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://themealprepideas.com";
+  const { error } = await adminClient.auth.admin.inviteUserByEmail(email.trim(), {
+    data: { is_staff_invite: true },
+    redirectTo: `${siteUrl}/admin/set-password`,
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 export async function getMyId() {
   const profile = await getCurrentProfile();
   return profile?.id ?? null;

@@ -4,9 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import {
   Mail, Loader2, Trash2, Send, ShieldCheck, ChevronDown, ChevronUp,
-  FileText, UtensilsCrossed, MessageCircle, ImageIcon, Globe, Shield,
+  FileText, UtensilsCrossed, MessageCircle, ImageIcon, Globe, Shield, RefreshCw,
 } from "lucide-react";
-import { inviteUser, updateUserRole, removeUser, updateUserPermissions } from "@/lib/users/mutations";
+import { inviteUser, updateUserRole, removeUser, updateUserPermissions, resendInvite } from "@/lib/users/mutations";
 import type { StaffUser } from "@/lib/users/queries";
 import type { Role, EditorPermissions } from "@/lib/auth/types";
 import { DEFAULT_PERMISSIONS } from "@/lib/auth/types";
@@ -51,6 +51,8 @@ function UserRow({ user, isSelf, onChanged, onRemoved }: {
 }) {
   const [changingRole, setChangingRole] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPerms, setShowPerms] = useState(false);
   const [perms, setPerms] = useState<EditorPermissions>(
@@ -74,6 +76,16 @@ function UserRow({ user, isSelf, onChanged, onRemoved }: {
     setRemoving(false);
     if (!result.ok) return setError(result.error);
     onRemoved(user.id);
+  };
+
+  const handleResend = async () => {
+    setError(null);
+    setResending(true);
+    const result = await resendInvite(user.email);
+    setResending(false);
+    if (!result.ok) return setError(result.error);
+    setResendSent(true);
+    setTimeout(() => setResendSent(false), 4000);
   };
 
   const handleSavePerms = async () => {
@@ -105,6 +117,7 @@ function UserRow({ user, isSelf, onChanged, onRemoved }: {
           </p>
           <p className="truncate text-xs text-brand-light">{user.email}</p>
           {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+          {resendSent && <p className="mt-1 text-xs text-brand-primary-dark">Invite resent ✓</p>}
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -129,6 +142,19 @@ function UserRow({ user, isSelf, onChanged, onRemoved }: {
             <option value="editor">Editor</option>
             <option value="admin">Admin</option>
           </select>
+
+          {!isSelf && (
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              title={resendSent ? "Invite sent!" : "Resend invite email"}
+              className={`flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors disabled:opacity-30 ${resendSent ? "text-brand-primary-dark" : "text-brand-light hover:bg-brand-primary/10 hover:text-brand-primary-dark"}`}
+              aria-label="Resend invite"
+            >
+              {resending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className={`size-4 ${resendSent ? "text-brand-primary" : ""}`} />}
+            </button>
+          )}
 
           <button
             type="button"
