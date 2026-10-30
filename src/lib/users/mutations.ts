@@ -80,11 +80,45 @@ export async function resendInvite(email: string): Promise<UserActionResult> {
   await requireRole(["admin"]);
   const adminClient = createAdminClient();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://themealprepideas.com";
-  const { error } = await adminClient.auth.admin.inviteUserByEmail(email.trim(), {
+  const setPasswordUrl = `${siteUrl}/admin/set-password`;
+
+  // Try the normal invite first (works for new / never-confirmed users)
+  const { error: inviteErr } = await adminClient.auth.admin.inviteUserByEmail(email.trim(), {
     data: { is_staff_invite: true },
-    redirectTo: `${siteUrl}/admin/set-password`,
+    redirectTo: setPasswordUrl,
   });
-  if (error) return { ok: false, error: error.message };
+
+  if (!inviteErr) return { ok: true };
+
+  // User already exists — generate a fresh invite link and email it ourselves
+  const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
+    type: "invite",
+    email: email.trim(),
+    options: { redirectTo: setPasswordUrl },
+  });
+
+  if (linkErr || !linkData?.properties?.action_link) {
+    return { ok: false, error: linkErr?.message ?? "Could not generate invite link." };
+  }
+
+  const { getResendClient, EMAIL_FROM } = await import("@/lib/email/resend");
+  const resend = getResendClient();
+  if (!resend) return { ok: false, error: "Email service not configured (RESEND_API_KEY missing)." };
+
+  const link = linkData.properties.action_link;
+  const { error: emailErr } = await resend.emails.send({
+    from: EMAIL_FROM,
+    to: email.trim(),
+    subject: "You've been invited to The Meal Prep Ideas dashboard",
+    html: `
+      <p>Hi,</p>
+      <p>You've been invited to access the Meal Prep Ideas admin dashboard.</p>
+      <p><a href="${link}" style="display:inline-block;background:#2e7d32;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Set your password →</a></p>
+      <p style="color:#888;font-size:12px;">This link expires in 24 hours. If you did not expect this email, ignore it.</p>
+    `,
+  });
+
+  if (emailErr) return { ok: false, error: "Link generated but email failed: " + emailErr.message };
   return { ok: true };
 }
 
