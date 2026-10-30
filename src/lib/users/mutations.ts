@@ -17,8 +17,10 @@ export async function inviteUser(
   if (!email.trim()) return { ok: false, error: "Email is required." };
 
   const adminClient = createAdminClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://themealprepideas.com";
   const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email.trim(), {
     data: { is_staff_invite: true },
+    redirectTo: `${siteUrl}/admin/set-password`,
   });
 
   if (error || !data.user) return { ok: false, error: error?.message ?? "Could not send invite." };

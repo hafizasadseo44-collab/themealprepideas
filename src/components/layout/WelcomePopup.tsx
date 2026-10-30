@@ -66,10 +66,10 @@ export default function WelcomePopup() {
             aria-modal="true"
             role="dialog"
           >
-            <div className="relative w-full max-w-[480px] overflow-hidden rounded-[28px] bg-white shadow-[0_32px_80px_-16px_rgba(17,24,39,0.35)]">
+            <div className="relative w-full max-w-[480px] overflow-hidden rounded-[20px] sm:rounded-[28px] bg-white shadow-[0_32px_80px_-16px_rgba(17,24,39,0.35)]">
 
               {/* ── Hero header ── */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-[#1b5e20] via-[#2e7d32] to-[#3fa34d] px-8 pt-10 pb-8 text-white">
+              <div className="relative overflow-hidden bg-gradient-to-br from-[#1b5e20] via-[#2e7d32] to-[#3fa34d] px-5 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-white">
 
                 {/* Animated blobs */}
                 <motion.div
@@ -127,18 +127,18 @@ export default function WelcomePopup() {
                   <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-white/70">
                     The Meal Prep Ideas
                   </p>
-                  <h2 className="font-display text-[28px] leading-tight text-white">
+                  <h2 className="font-display text-[22px] sm:text-[28px] leading-tight text-white">
                     Meal prep just got<br />
                     <span className="text-[#fcd34d]">deliciously easy.</span>
                   </h2>
-                  <p className="mt-2 text-[14px] leading-relaxed text-white/80">
+                  <p className="mt-2 text-[13px] sm:text-[14px] leading-relaxed text-white/80">
                     100+ healthy recipes · weekly plans · expert guides
                   </p>
                 </motion.div>
               </div>
 
               {/* ── Body ── */}
-              <div className="px-8 py-7">
+              <div className="px-5 py-5 sm:px-8 sm:py-7">
 
                 {/* Stats row */}
                 <motion.div
@@ -184,19 +184,19 @@ export default function WelcomePopup() {
                       <p className="mb-3 text-[13px] font-semibold text-gray-700">
                         Get weekly meal plans — free in your inbox:
                       </p>
-                      <form onSubmit={handleSubscribe} className="flex gap-2">
+                      <form onSubmit={handleSubscribe} className="flex flex-col gap-2 sm:flex-row">
                         <input
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="your@email.com"
-                          className="h-11 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 text-[14px] outline-none transition-all focus:border-[#3fa34d] focus:bg-white focus:ring-2 focus:ring-[#3fa34d]/20"
+                          className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 text-[14px] outline-none transition-all focus:border-[#3fa34d] focus:bg-white focus:ring-2 focus:ring-[#3fa34d]/20 sm:flex-1"
                           required
                         />
                         <button
                           type="submit"
                           disabled={loading}
-                          className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-[#f59e0b] px-5 text-[13px] font-bold text-white shadow-[0_4px_14px_-4px_rgba(245,158,11,0.6)] transition-all hover:bg-[#d97706] hover:shadow-[0_6px_18px_-4px_rgba(245,158,11,0.7)] active:scale-95 disabled:opacity-70"
+                          className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-[#f59e0b] px-5 text-[13px] font-bold text-white shadow-[0_4px_14px_-4px_rgba(245,158,11,0.6)] transition-all hover:bg-[#d97706] hover:shadow-[0_6px_18px_-4px_rgba(245,158,11,0.7)] active:scale-95 disabled:opacity-70 sm:w-auto"
                         >
                           {loading ? (
                             <motion.span
