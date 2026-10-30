@@ -26,16 +26,29 @@ export async function generateMetadata({
   const post = await getPostBySlug(slug);
   if (!post) return { title: "Article Not Found | The Meal Prep Ideas" };
 
+  const canonicalUrl = post.seo.canonical || `https://themealprepideas.com/blog/${post.slug}`;
+  const description = post.seo.description || post.excerpt;
+  const ogImage = post.seo.ogImage || post.image;
+
   return {
     title: post.seo.title || `${post.title} | The Meal Prep Ideas`,
-    description: post.seo.description || post.excerpt,
-    alternates: post.seo.canonical ? { canonical: post.seo.canonical } : undefined,
+    description,
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title: post.title,
-      description: post.seo.description || post.excerpt,
+      description,
       type: "article",
       siteName: "The Meal Prep Ideas",
-      images: [{ url: post.seo.ogImage || post.image }],
+      url: canonicalUrl,
+      publishedTime: post.date,
+      authors: [post.author.name],
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: post.title }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -49,6 +62,7 @@ export default async function ArticlePage({
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
+  const canonicalUrl = post.seo?.canonical || `https://themealprepideas.com/blog/${post.slug}`;
   const headings = getHeadings(post.content);
   const [related, coAuthors] = await Promise.all([
     getRelatedPosts(post.slug, 3),
@@ -62,9 +76,20 @@ export default async function ArticlePage({
     description: post.excerpt,
     image: post.image,
     datePublished: post.date,
-    author: { "@type": "Person", name: post.author.name },
-    publisher: { "@type": "Organization", name: "The Meal Prep Ideas" },
-    mainEntityOfPage: `https://themealprepideas.com/blog/${post.slug}`,
+    dateModified: post.date,
+    url: canonicalUrl,
+    mainEntityOfPage: canonicalUrl,
+    author: {
+      "@type": "Person",
+      name: post.author.name,
+      ...(post.authorId ? { url: `https://themealprepideas.com/authors/${post.authorId}` } : {}),
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "The Meal Prep Ideas",
+      url: "https://themealprepideas.com",
+      logo: { "@type": "ImageObject", url: "https://themealprepideas.com/icon.svg", width: 512, height: 512 },
+    },
   };
 
   const breadcrumbSchema = {

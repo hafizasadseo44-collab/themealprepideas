@@ -1,16 +1,19 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  // Site-wide crawl block while the site is still in development — disallows
-  // every path for every crawler so nothing gets indexed. To go live, restore
-  // `allow: "/"` with the admin/account disallow list and re-add the sitemap
-  // (`sitemap: "https://themealprepideas.com/sitemap.xml"`).
   return {
     rules: [
       {
         userAgent: "*",
-        disallow: "/",
+        allow: "/",
+        disallow: ["/admin", "/admin/", "/account", "/account/"],
       },
+      // Block AI training crawlers — allow citation/indexing but not training data
+      { userAgent: "GPTBot", disallow: "/" },
+      { userAgent: "Google-Extended", allow: "/" },
+      { userAgent: "PerplexityBot", allow: "/" },
+      { userAgent: "ClaudeBot", allow: "/" },
     ],
+    sitemap: "https://themealprepideas.com/sitemap.xml",
   };
 }

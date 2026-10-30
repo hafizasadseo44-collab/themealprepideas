@@ -9,12 +9,19 @@ export const metadata: Metadata = {
   title: "Meal Prep Blog: Tips, Guides & Advice | The Meal Prep Ideas",
   description:
     "Practical meal prep guides on planning, storage, nutrition, and gear — real advice for making healthy eating simple every week.",
+  alternates: { canonical: "https://themealprepideas.com/blog" },
   openGraph: {
     title: "Meal Prep Blog: Tips, Guides & Advice | The Meal Prep Ideas",
     description:
       "Practical meal prep guides on planning, storage, nutrition, and gear — real advice for making healthy eating simple every week.",
     type: "website",
     siteName: "The Meal Prep Ideas",
+    url: "https://themealprepideas.com/blog",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Meal Prep Blog: Tips, Guides & Advice | The Meal Prep Ideas",
+    description: "Practical meal prep guides on planning, storage, nutrition, and gear.",
   },
 };
 

@@ -11,6 +11,19 @@ export const metadata: Metadata = {
   title: "About Us | The Meal Prep Ideas",
   description:
     "The Meal Prep Ideas is a library of tested, real-photo meal prep recipes built for busy weeks — no fluff, just food that actually works on a weeknight.",
+  alternates: { canonical: "https://themealprepideas.com/about" },
+  openGraph: {
+    title: "About Us | The Meal Prep Ideas",
+    description: "The Meal Prep Ideas is a library of tested, real-photo meal prep recipes built for busy weeks.",
+    type: "website",
+    siteName: "The Meal Prep Ideas",
+    url: "https://themealprepideas.com/about",
+  },
+  twitter: {
+    card: "summary",
+    title: "About Us | The Meal Prep Ideas",
+    description: "The Meal Prep Ideas is a library of tested, real-photo meal prep recipes built for busy weeks.",
+  },
 };
 
 export default async function AboutPage() {

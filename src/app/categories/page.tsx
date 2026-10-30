@@ -12,12 +12,19 @@ export const metadata: Metadata = {
   title: "Browse All Meal Prep Categories | The Meal Prep Ideas",
   description:
     "Every meal prep category in one place — breakfast, lunch, dinner, family meals, vegan, keto, and curated collections by goal, protein, and cuisine.",
+  alternates: { canonical: "https://themealprepideas.com/categories" },
   openGraph: {
     title: "Browse All Meal Prep Categories | The Meal Prep Ideas",
     description:
       "Every meal prep category in one place — breakfast, lunch, dinner, family meals, vegan, keto, and curated collections by goal, protein, and cuisine.",
     type: "website",
     siteName: "The Meal Prep Ideas",
+    url: "https://themealprepideas.com/categories",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Browse All Meal Prep Categories | The Meal Prep Ideas",
+    description: "Every meal prep category in one place — breakfast, lunch, dinner, vegan, keto, and more.",
   },
 };
 

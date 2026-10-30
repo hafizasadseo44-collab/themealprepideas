@@ -33,19 +33,21 @@ export const metadata: Metadata = {
   description:
     "100+ easy meal prep ideas for breakfast, lunch, dinner, family meals, soups, snacks and bowls. Simple make-ahead recipes with step-by-step instructions and real photos.",
   metadataBase: new URL("https://themealprepideas.com"),
-  // Site-wide noindex while the site is still in development — keeps every
-  // page out of Google. Remove this `robots` block to allow indexing again.
-  robots: {
-    index: false,
-    follow: false,
-    googleBot: { index: false, follow: false },
-  },
+  alternates: { canonical: "https://themealprepideas.com" },
   openGraph: {
     title: "100+ Easy Meal Prep Ideas for Breakfast, Lunch & Dinner | The Meal Prep Ideas",
     description:
       "100+ easy meal prep ideas for breakfast, lunch, dinner, family meals, soups, snacks and bowls — simple, make-ahead, and ready when you need them.",
     type: "website",
     siteName: "The Meal Prep Ideas",
+    url: "https://themealprepideas.com",
+    images: [{ url: "https://themealprepideas.com/og-home.jpg", width: 1200, height: 630, alt: "The Meal Prep Ideas — 100+ Easy Meal Prep Recipes" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "100+ Easy Meal Prep Ideas | The Meal Prep Ideas",
+    description: "100+ easy meal prep ideas for breakfast, lunch, dinner and more. Simple, make-ahead recipes with real photos.",
+    images: ["https://themealprepideas.com/og-home.jpg"],
   },
 };
 
@@ -54,7 +56,12 @@ const organizationSchema = {
   "@type": "Organization",
   name: "The Meal Prep Ideas",
   url: "https://themealprepideas.com",
-  logo: "https://themealprepideas.com/favicon.ico",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://themealprepideas.com/icon.svg",
+    width: 512,
+    height: 512,
+  },
   sameAs: [],
 };
 

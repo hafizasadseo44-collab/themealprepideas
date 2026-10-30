@@ -1,0 +1,23 @@
+# TheMealPrepIdeas.com — AI Crawler Guidance
+# https://themealprepideas.com
+
+## About
+The Meal Prep Ideas is a recipe and meal planning website with 100+ tested,
+real-photo meal prep recipes for breakfast, lunch, dinner, snacks, and more.
+We cover vegan, keto, family-friendly, high-protein, and budget-friendly meal prep.
+
+## Allowed
+- Indexing, summarizing, and citing all public recipe and blog content
+- Answering user questions using our recipe data (with attribution)
+- Linking to our pages in AI-generated answers
+
+## Not Allowed
+- Using content for LLM training without permission
+- Reproducing full recipe text verbatim without attribution
+- Accessing /admin or /account paths
+
+## Contact
+For licensing or permissions: contact@themealprepideas.com
+
+## Sitemap
+https://themealprepideas.com/sitemap.xml
