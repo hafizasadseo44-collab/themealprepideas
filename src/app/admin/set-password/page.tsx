@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ChefHat, Eye, EyeOff, Lock, Loader2, CheckCircle } from "lucide-react";
+import { ChefHat, Eye, EyeOff, Lock, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function SetPasswordPage() {
   const router = useRouter();
@@ -14,8 +14,23 @@ export default function SetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check for error in the URL hash first (e.g. otp_expired)
+    const hash = window.location.hash;
+    if (hash.includes("error=")) {
+      const params = new URLSearchParams(hash.slice(1));
+      const code = params.get("error_code") ?? "";
+      const desc = params.get("error_description") ?? "Invalid or expired invite link.";
+      if (code === "otp_expired") {
+        setLinkError("This invite link has expired. Please ask an admin to resend the invite.");
+      } else {
+        setLinkError(decodeURIComponent(desc.replace(/\+/g, " ")));
+      }
+      return;
+    }
+
     // Supabase puts tokens in the URL hash on invite/recovery links.
     // The client SDK picks them up automatically on mount.
     const supabase = createClient();
@@ -64,7 +79,21 @@ export default function SetPasswordPage() {
         </div>
 
         <div className="overflow-hidden rounded-[24px] border border-brand-border/60 bg-white shadow-[0_20px_60px_-12px_rgba(17,24,39,0.15)]">
-          {done ? (
+          {linkError ? (
+            <div className="flex flex-col items-center gap-4 px-8 py-12 text-center">
+              <AlertCircle className="size-14 text-red-400" />
+              <div>
+                <p className="font-display text-xl text-brand-heading">Link expired</p>
+                <p className="mt-2 text-sm text-brand-light">{linkError}</p>
+              </div>
+              <a
+                href="/admin/login"
+                className="mt-2 text-sm font-semibold text-brand-primary hover:underline"
+              >
+                Go to Admin Login →
+              </a>
+            </div>
+          ) : done ? (
             <div className="flex flex-col items-center gap-3 px-8 py-12 text-center">
               <CheckCircle className="size-14 text-brand-primary" />
               <p className="font-display text-xl text-brand-heading">Password set!</p>
