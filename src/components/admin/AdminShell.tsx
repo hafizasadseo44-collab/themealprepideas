@@ -4,7 +4,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopbar from "@/components/admin/AdminTopbar";
-import type { Profile } from "@/lib/auth/session";
+import type { Profile } from "@/lib/auth/types";
 
 export default function AdminShell({ profile, children }: { profile: Profile; children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);

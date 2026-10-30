@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Menu, LogOut, ChevronDown, UserCircle } from "lucide-react";
 import { signOutAction } from "@/app/admin/actions/auth";
-import type { Profile } from "@/lib/auth/session";
+import type { Profile } from "@/lib/auth/types";
 
 export default function AdminTopbar({ profile, onMenuClick }: { profile: Profile; onMenuClick: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);

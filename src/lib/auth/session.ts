@@ -2,38 +2,10 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-export type { Role, EditorPermissions } from "@/lib/auth/types";
-export { DEFAULT_PERMISSIONS } from "@/lib/auth/types";
-import type { Role, EditorPermissions } from "@/lib/auth/types";
-import { DEFAULT_PERMISSIONS } from "@/lib/auth/types";
-
-export type Profile = {
-  id: string;
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-  role: Role;
-  permissions: EditorPermissions | null;
-  // E-E-A-T fields
-  job_title: string | null;
-  credentials: string | null;
-  years_experience: number | null;
-  expertise: string[] | null;
-  website_url: string | null;
-  twitter_url: string | null;
-  instagram_url: string | null;
-  facebook_url: string | null;
-  pinterest_url: string | null;
-  linkedin_url: string | null;
-  youtube_url: string | null;
-};
-
-/** Returns effective permissions: admins always have everything. */
-export function getEffectivePermissions(profile: Profile): EditorPermissions {
-  if (profile.role === "admin") return DEFAULT_PERMISSIONS;
-  return { ...DEFAULT_PERMISSIONS, ...(profile.permissions ?? {}) };
-}
+export type { Role, EditorPermissions, Profile } from "@/lib/auth/types";
+export { DEFAULT_PERMISSIONS, getEffectivePermissions } from "@/lib/auth/types";
+import type { Role } from "@/lib/auth/types";
+import type { Profile } from "@/lib/auth/types";
 
 /**
  * Reads the current signed-in user's profile (id, role, display info).

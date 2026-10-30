@@ -45,7 +45,7 @@ function YoutubeIcon({ className }: { className?: string }) {
 }
 import MediaPicker from "@/components/admin/media/MediaPicker";
 import { updateOwnProfile, updateOwnPassword } from "@/lib/profile/mutations";
-import type { Profile } from "@/lib/auth/session";
+import type { Profile } from "@/lib/auth/types";
 import type { MediaItem } from "@/lib/media/upload";
 
 // Pinterest is not in lucide — use a simple P icon
