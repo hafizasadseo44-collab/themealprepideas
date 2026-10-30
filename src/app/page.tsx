@@ -12,6 +12,11 @@ import Newsletter from "@/components/home/Newsletter";
 import { faqs } from "@/data/site";
 import { getPageWithSections } from "@/lib/recipes/queries";
 
+// Re-fetch from Supabase at most once per hour at runtime so recipe changes
+// appear even if the Hostinger build ran before the recipes were in the DB.
+// revalidatePath("/") on recipe publish/unpublish forces immediate refresh.
+export const revalidate = 3600;
+
 const faqSchema = {
   "@context": "https://schema.org",
   "@type": "FAQPage",

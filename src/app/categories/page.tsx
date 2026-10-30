@@ -8,6 +8,8 @@ import Newsletter from "@/components/home/Newsletter";
 import { collections } from "@/data/site";
 import { getRecipePages, getPageWithSections } from "@/lib/recipes/queries";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Browse All Meal Prep Categories | The Meal Prep Ideas",
   description:
