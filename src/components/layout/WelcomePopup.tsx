@@ -1,52 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Bookmark, CheckCircle2, ChefHat, Sparkles } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { X, ArrowRight, Check, Sparkles, ChefHat } from "lucide-react";
 
-const STORAGE_KEY = "tmpi_welcome_seen";
-const DELAY_MS = 2800;
+const STORAGE_KEY = "tmpi_welcome_v2";
+const DELAY_MS = 6000;
 
-const floatingItems = [
-  { emoji: "🥑", x: "8%", y: "12%", delay: 0, duration: 6 },
-  { emoji: "🍗", x: "88%", y: "10%", delay: 1.2, duration: 7 },
-  { emoji: "🥦", x: "5%", y: "78%", delay: 0.6, duration: 8 },
-  { emoji: "🍜", x: "90%", y: "75%", delay: 1.8, duration: 6.5 },
-  { emoji: "🫐", x: "50%", y: "5%", delay: 0.3, duration: 7.5 },
-];
+const FLOATING = ["🥑", "🍗", "🥦", "🍜", "🫐", "🥕", "🌿", "🍋"];
 
 export default function WelcomePopup() {
-  const [open, setOpen] = useState(false);
+  const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     try {
       if (localStorage.getItem(STORAGE_KEY)) return;
-    } catch {
-      return;
-    }
-    const t = setTimeout(() => setOpen(true), DELAY_MS);
-    return () => clearTimeout(t);
+    } catch {}
+    timerRef.current = setTimeout(() => setShow(true), DELAY_MS);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
   function dismiss() {
-    try { localStorage.setItem(STORAGE_KEY, "1"); } catch { /* noop */ }
-    setOpen(false);
+    setShow(false);
+    try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubscribe(e: React.FormEvent) {
     e.preventDefault();
-    if (!email) return;
-    setSubmitted(true);
+    if (!email.trim()) return;
+    setLoading(true);
+    await new Promise((r) => setTimeout(r, 900));
+    setLoading(false);
+    setSubscribed(true);
+    try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
     setTimeout(dismiss, 2200);
   }
 
   return (
     <AnimatePresence>
-      {open && (
+      {show && (
         <>
           {/* Backdrop */}
           <motion.div
@@ -54,176 +50,192 @@ export default function WelcomePopup() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm"
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-[998] bg-black/50 backdrop-blur-[6px]"
             onClick={dismiss}
           />
 
           {/* Modal */}
           <motion.div
             key="modal"
-            initial={{ opacity: 0, scale: 0.88, y: 40 }}
+            initial={{ opacity: 0, scale: 0.86, y: 48 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 30 }}
-            transition={{ type: "spring", stiffness: 340, damping: 28 }}
-            className="fixed inset-0 z-[201] flex items-center justify-center p-4"
+            exit={{ opacity: 0, scale: 0.92, y: 24 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.9 }}
+            className="fixed inset-0 z-[999] flex items-center justify-center p-4"
             aria-modal="true"
             role="dialog"
-            aria-label="Welcome to The Meal Prep Ideas"
           >
-            <div className="relative w-full max-w-[500px] overflow-hidden rounded-[28px] bg-brand-cream shadow-[0_40px_100px_-20px_rgba(17,24,39,0.4)]">
+            <div className="relative w-full max-w-[480px] overflow-hidden rounded-[28px] bg-white shadow-[0_32px_80px_-16px_rgba(17,24,39,0.35)]">
 
-              {/* Floating food emojis */}
-              {floatingItems.map((item, i) => (
-                <motion.span
-                  key={i}
-                  className="pointer-events-none absolute text-2xl select-none"
-                  style={{ left: item.x, top: item.y }}
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: item.duration, delay: item.delay, repeat: Infinity, ease: "easeInOut" }}
+              {/* ── Hero header ── */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-[#1b5e20] via-[#2e7d32] to-[#3fa34d] px-8 pt-10 pb-8 text-white">
+
+                {/* Animated blobs */}
+                <motion.div
+                  animate={{ scale: [1, 1.18, 1], opacity: [0.18, 0.32, 0.18] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  className="pointer-events-none absolute -right-12 -top-12 size-52 rounded-full bg-white/20 blur-2xl"
+                />
+                <motion.div
+                  animate={{ scale: [1, 1.22, 1], opacity: [0.12, 0.26, 0.12] }}
+                  transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                  className="pointer-events-none absolute -left-8 bottom-0 size-40 rounded-full bg-[#f59e0b]/30 blur-2xl"
+                />
+
+                {/* Floating food emojis */}
+                {FLOATING.map((emoji, i) => (
+                  <motion.span
+                    key={emoji}
+                    className="pointer-events-none absolute select-none text-lg"
+                    style={{
+                      left: `${8 + (i % 4) * 24}%`,
+                      top: `${12 + Math.floor(i / 4) * 55}%`,
+                    }}
+                    animate={{ y: [0, -8, 0], opacity: [0.55, 0.9, 0.55] }}
+                    transition={{ duration: 2.8 + i * 0.35, repeat: Infinity, delay: i * 0.22 }}
+                  >
+                    {emoji}
+                  </motion.span>
+                ))}
+
+                {/* Close button */}
+                <button
+                  onClick={dismiss}
+                  className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-white/15 text-white/80 transition-all hover:bg-white/25 hover:text-white"
+                  aria-label="Close"
                 >
-                  {item.emoji}
-                </motion.span>
-              ))}
+                  <X className="size-4" />
+                </button>
 
-              {/* Close */}
-              <button
-                onClick={dismiss}
-                className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-full bg-white/80 text-brand-light backdrop-blur transition-colors hover:bg-white hover:text-brand-heading"
-                aria-label="Close"
-              >
-                <X className="size-4" />
-              </button>
-
-              {/* Header */}
-              <div className="relative bg-gradient-to-br from-brand-primary-dark via-brand-primary to-[#5cb85c] px-8 pt-10 pb-8 text-center">
-                <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-t-[28px]">
-                  <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl" />
-                  <div className="absolute -bottom-8 -right-8 size-40 rounded-full bg-brand-orange/25 blur-2xl" />
-                </div>
-
+                {/* Brand icon */}
                 <motion.div
                   initial={{ scale: 0, rotate: -20 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.15 }}
-                  className="relative inline-flex size-16 items-center justify-center rounded-2xl bg-white/20 text-white shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)] backdrop-blur"
+                  transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.2 }}
+                  className="relative z-10 mb-4 inline-flex size-14 items-center justify-center rounded-2xl bg-white/20 ring-2 ring-white/30 backdrop-blur-sm"
                 >
-                  <ChefHat className="size-8" />
+                  <ChefHat className="size-7 text-white" />
                 </motion.div>
 
-                <motion.h2
-                  initial={{ opacity: 0, y: 10 }}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.22 }}
-                  className="relative mt-4 font-display text-[26px] leading-tight text-white"
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="relative z-10"
                 >
-                  Welcome to Meal Prep Ideas
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="relative mt-2 text-sm text-white/85"
-                >
-                  100+ easy recipes to save time every week
-                </motion.p>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-white/70">
+                    The Meal Prep Ideas
+                  </p>
+                  <h2 className="font-display text-[28px] leading-tight text-white">
+                    Meal prep just got<br />
+                    <span className="text-[#fcd34d]">deliciously easy.</span>
+                  </h2>
+                  <p className="mt-2 text-[14px] leading-relaxed text-white/80">
+                    100+ healthy recipes · weekly plans · expert guides
+                  </p>
+                </motion.div>
               </div>
 
-              {/* Body */}
+              {/* ── Body ── */}
               <div className="px-8 py-7">
+
+                {/* Stats row */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="mb-6 flex items-center justify-between rounded-2xl bg-[#f0faf1] px-5 py-3.5"
+                >
+                  {[
+                    { num: "100+", label: "Recipes" },
+                    { num: "5★", label: "Rated" },
+                    { num: "Free", label: "Always" },
+                  ].map(({ num, label }) => (
+                    <div key={label} className="text-center">
+                      <p className="font-display text-[20px] leading-none text-[#2e7d32]">{num}</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-[#4a7c59]">{label}</p>
+                    </div>
+                  ))}
+                </motion.div>
+
+                {/* Subscribe form */}
                 <AnimatePresence mode="wait">
-                  {submitted ? (
+                  {subscribed ? (
                     <motion.div
                       key="success"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex flex-col items-center gap-3 py-4 text-center"
+                      className="flex flex-col items-center gap-2 py-4 text-center"
                     >
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 300, damping: 18 }}
-                        className="flex size-14 items-center justify-center rounded-full bg-brand-primary/15 text-brand-primary-dark"
+                        className="flex size-14 items-center justify-center rounded-full bg-[#3fa34d]"
                       >
-                        <CheckCircle2 className="size-7" />
+                        <Check className="size-7 text-white" />
                       </motion.div>
-                      <p className="font-display text-xl text-brand-heading">You&apos;re in!</p>
-                      <p className="text-sm text-brand-light">Check your inbox for your free 7-day meal prep plan.</p>
+                      <p className="mt-2 font-display text-[18px] text-[#1b5e20]">You're in! 🎉</p>
+                      <p className="text-sm text-gray-500">Check your inbox for delicious meal plans.</p>
                     </motion.div>
                   ) : (
-                    <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-
-                      {/* Newsletter block */}
-                      <div className="rounded-2xl border border-brand-border/60 bg-white p-5 shadow-sm">
-                        <div className="flex items-center gap-2.5">
-                          <span className="flex size-9 items-center justify-center rounded-xl bg-brand-orange/12 text-brand-orange">
-                            <Mail className="size-4.5" />
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-brand-heading">Get Your Free 7-Day Meal Plan</p>
-                            <p className="text-xs text-brand-light">Join 50,000+ subscribers</p>
-                          </div>
-                        </div>
-                        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2.5 sm:flex-row">
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="your@email.com"
-                            className="h-11 w-full rounded-[12px] border border-brand-border/80 bg-brand-cream px-4 text-sm text-brand-heading placeholder:text-brand-light/70 focus:border-brand-primary/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-                          />
-                          <button
-                            type="submit"
-                            className="h-11 shrink-0 rounded-[12px] bg-brand-orange px-5 text-sm font-semibold text-white shadow-[0_6px_16px_-6px_rgba(245,158,11,0.6)] transition-all hover:-translate-y-0.5 hover:bg-[#d97706] hover:shadow-[0_10px_20px_-8px_rgba(245,158,11,0.5)]"
-                          >
-                            Subscribe
-                          </button>
-                        </form>
-                      </div>
+                    <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                      <p className="mb-3 text-[13px] font-semibold text-gray-700">
+                        Get weekly meal plans — free in your inbox:
+                      </p>
+                      <form onSubmit={handleSubscribe} className="flex gap-2">
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="h-11 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 text-[14px] outline-none transition-all focus:border-[#3fa34d] focus:bg-white focus:ring-2 focus:ring-[#3fa34d]/20"
+                          required
+                        />
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-[#f59e0b] px-5 text-[13px] font-bold text-white shadow-[0_4px_14px_-4px_rgba(245,158,11,0.6)] transition-all hover:bg-[#d97706] hover:shadow-[0_6px_18px_-4px_rgba(245,158,11,0.7)] active:scale-95 disabled:opacity-70"
+                        >
+                          {loading ? (
+                            <motion.span
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                              className="inline-block size-4 rounded-full border-2 border-white border-t-transparent"
+                            />
+                          ) : (
+                            <>Join <ArrowRight className="size-3.5" /></>
+                          )}
+                        </button>
+                      </form>
 
                       {/* Divider */}
-                      <div className="my-4 flex items-center gap-3">
-                        <div className="h-px flex-1 bg-brand-border/60" />
-                        <span className="text-xs text-brand-light">or</span>
-                        <div className="h-px flex-1 bg-brand-border/60" />
+                      <div className="my-5 flex items-center gap-3">
+                        <div className="h-px flex-1 bg-gray-100" />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">or</span>
+                        <div className="h-px flex-1 bg-gray-100" />
                       </div>
 
-                      {/* Sign up block */}
-                      <div className="rounded-2xl border border-brand-primary/25 bg-brand-primary/5 p-5">
-                        <div className="flex items-center gap-2.5">
-                          <span className="flex size-9 items-center justify-center rounded-xl bg-brand-primary/12 text-brand-primary-dark">
-                            <Bookmark className="size-4.5" />
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-brand-heading">Save Recipes to Your Account</p>
-                            <p className="text-xs text-brand-light">Bookmark favourites, access them anywhere</p>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-2.5">
-                          <Button href="/account/signup" size="md" className="flex-1" onClick={dismiss} icon={Sparkles} iconPosition="left">
-                            Create Free Account
-                          </Button>
-                          <Link
-                            href="/account/login"
-                            onClick={dismiss}
-                            className="flex h-11 items-center rounded-[12px] border border-brand-border px-4 text-sm font-semibold text-brand-body transition-colors hover:border-brand-primary/50 hover:text-brand-primary-dark"
-                          >
-                            Log In
-                          </Link>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={dismiss}
-                        className="mt-4 w-full text-center text-xs text-brand-light/70 transition-colors hover:text-brand-light"
+                      {/* Sign up CTA */}
+                      <a
+                        href="/sign-up"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#3fa34d]/30 bg-[#f0faf1] py-3 text-[14px] font-bold text-[#2e7d32] transition-all hover:border-[#3fa34d] hover:bg-[#e8f5e9] hover:shadow-md"
                       >
-                        No thanks, just browsing
-                      </button>
+                        <Sparkles className="size-4 text-[#f59e0b]" />
+                        Create free account — save your recipes
+                      </a>
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Dismiss */}
+                <button
+                  onClick={dismiss}
+                  className="mt-4 w-full text-center text-[12px] text-gray-400 transition-colors hover:text-gray-600"
+                >
+                  No thanks, I'll just browse
+                </button>
               </div>
             </div>
           </motion.div>
