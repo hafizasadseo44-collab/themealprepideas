@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import { inviteUser, updateUserRole, removeUser, updateUserPermissions } from "@/lib/users/mutations";
 import type { StaffUser } from "@/lib/users/queries";
-import type { Role, EditorPermissions } from "@/lib/auth/session";
-import { DEFAULT_PERMISSIONS } from "@/lib/auth/session";
+import type { Role, EditorPermissions } from "@/lib/auth/types";
+import { DEFAULT_PERMISSIONS } from "@/lib/auth/types";
 
 type PermissionKey = keyof EditorPermissions;
 

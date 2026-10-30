@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { Role, EditorPermissions } from "@/lib/auth/session";
+import type { Role, EditorPermissions } from "@/lib/auth/types";
 
 export type StaffUser = {
   id: string;

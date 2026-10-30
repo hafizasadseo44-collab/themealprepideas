@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentProfile, requireRole } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { Role, EditorPermissions } from "@/lib/auth/session";
+import type { Role, EditorPermissions } from "@/lib/auth/types";
 
 export type UserActionResult = { ok: true } | { ok: false; error: string };
 

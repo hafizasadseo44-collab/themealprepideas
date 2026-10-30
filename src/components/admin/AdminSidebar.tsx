@@ -15,8 +15,9 @@ import {
   Menu,
   type LucideIcon,
 } from "lucide-react";
-import type { Profile, EditorPermissions } from "@/lib/auth/session";
+import type { Profile } from "@/lib/auth/session";
 import { getEffectivePermissions } from "@/lib/auth/session";
+import type { EditorPermissions } from "@/lib/auth/types";
 
 type NavItem = {
   label: string;

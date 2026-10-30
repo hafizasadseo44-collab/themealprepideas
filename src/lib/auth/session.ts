@@ -2,24 +2,10 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-
-export type Role = "admin" | "editor";
-
-export type EditorPermissions = {
-  can_posts: boolean;
-  can_recipes: boolean;
-  can_comments: boolean;
-  can_media: boolean;
-  can_publish: boolean;
-};
-
-export const DEFAULT_PERMISSIONS: EditorPermissions = {
-  can_posts: true,
-  can_recipes: true,
-  can_comments: true,
-  can_media: true,
-  can_publish: true,
-};
+export type { Role, EditorPermissions } from "@/lib/auth/types";
+export { DEFAULT_PERMISSIONS } from "@/lib/auth/types";
+import type { Role, EditorPermissions } from "@/lib/auth/types";
+import { DEFAULT_PERMISSIONS } from "@/lib/auth/types";
 
 export type Profile = {
   id: string;
