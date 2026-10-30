@@ -33,16 +33,41 @@ export default function RecipeHero({ recipe }: { recipe: Recipe }) {
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-brand-body sm:text-lg">{recipe.description}</p>
 
           {/* Author + date byline */}
-          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-brand-light">
-            <span className="flex items-center gap-1.5">
-              <ChefHat className="size-4 text-brand-primary" />
-              <span className="font-semibold text-brand-body">
-                {recipe.author?.name ?? "The Meal Prep Ideas Team"}
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-sm text-brand-light">
+            {/* Avatar + name */}
+            {recipe.author?.id ? (
+              <Link href={`/authors/${recipe.author.id}`} className="group flex items-center gap-2.5">
+                {recipe.author.avatarUrl ? (
+                  <Image
+                    src={recipe.author.avatarUrl}
+                    alt={recipe.author.name}
+                    width={36}
+                    height={36}
+                    className="size-9 rounded-full object-cover ring-2 ring-brand-primary/20 ring-offset-1 transition-all group-hover:ring-brand-primary/60"
+                  />
+                ) : (
+                  <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-dark text-white">
+                    <ChefHat className="size-4" />
+                  </span>
+                )}
+                <span>
+                  <span className="font-semibold text-brand-body transition-colors group-hover:text-brand-primary-dark">
+                    {recipe.author.name}
+                  </span>
+                  {recipe.author.jobTitle && (
+                    <span className="ml-1.5 text-brand-light">· {recipe.author.jobTitle}</span>
+                  )}
+                </span>
+              </Link>
+            ) : (
+              <span className="flex items-center gap-2">
+                <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-dark text-white">
+                  <ChefHat className="size-4" />
+                </span>
+                <span className="font-semibold text-brand-body">The Meal Prep Ideas Team</span>
               </span>
-              {recipe.author?.jobTitle && (
-                <span className="text-brand-light">· {recipe.author.jobTitle}</span>
-              )}
-            </span>
+            )}
+            <span className="h-4 w-px bg-brand-border/60" />
             <span className="flex items-center gap-1.5">
               <CalendarDays className="size-4" />
               {new Date(recipe.createdAt).toLocaleDateString("en-US", {
