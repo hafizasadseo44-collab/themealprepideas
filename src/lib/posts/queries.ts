@@ -90,6 +90,19 @@ export async function getCategories(): Promise<Category[]> {
   return data;
 }
 
+export async function getPublishedPostsByAuthor(authorId: string): Promise<BlogPost[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .eq("author_id", authorId)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("published_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as unknown as PostRow[]).map(postRowToBlogPost);
+}
+
 /** Minimal slug + timestamp list for sitemap.ts — avoids fetching full post bodies. */
 export async function getSitemapPosts(): Promise<{ slug: string; updatedAt: string }[]> {
   const supabase = createPublicClient();

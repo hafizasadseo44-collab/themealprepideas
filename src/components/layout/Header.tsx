@@ -10,7 +10,6 @@ import {
   X,
   ChefHat,
   ChevronDown,
-  UtensilsCrossed,
   BookOpen,
   Info,
   Mail,
@@ -30,7 +29,6 @@ import type { MenuGroup } from "@/lib/menu/types";
 
 const navLinks: { label: string; href: string; icon: LucideIcon; hasMenu?: boolean }[] = [
   { label: "Browse Categories", href: "/categories", icon: LayoutGrid, hasMenu: true },
-  { label: "Recipes", href: "/recipes", icon: UtensilsCrossed },
   { label: "Blog", href: "/blog", icon: BookOpen },
   { label: "About", href: "/about", icon: Info },
   { label: "Contact", href: "/contact", icon: Mail },

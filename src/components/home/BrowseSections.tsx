@@ -16,19 +16,18 @@ const tabs = [
   { key: "meal-type", label: "By Meal Type", items: byMealType, basePath: "/meal-type" },
 ];
 
-// Slugs that map to a real page or an on-page section anchor instead of the
-// generic (not-yet-built) taxonomy route.
-const dietOverrides: Record<string, string> = {
-  vegan: "/vegan-meal-prep-ideas",
-  keto: "/keto-meal-prep-ideas",
-};
+// Slugs coming soon — not yet linked to a real page.
+const comingSoonSlugs = new Set(["vegan", "keto"]);
 
 const mealTypeAnchors = new Set(["breakfast", "lunch", "dinner", "snacks", "bowls"]);
 
 function resolveHref(tabKey: string, basePath: string, slug: string) {
-  if (tabKey === "diet" && dietOverrides[slug]) return dietOverrides[slug];
   if (tabKey === "meal-type" && mealTypeAnchors.has(slug)) return `#${slug}`;
   return `${basePath}/${slug}`;
+}
+
+function isComingSoon(tabKey: string, slug: string) {
+  return tabKey === "diet" && comingSoonSlugs.has(slug);
 }
 
 export default function BrowseSections() {
@@ -72,16 +71,28 @@ export default function BrowseSections() {
               transition={{ duration: 0.25 }}
               className="mt-8 flex flex-wrap justify-center gap-2.5"
             >
-              {current.items.map((item) => (
-                <Link
-                  key={item.slug}
-                  href={resolveHref(current.key, current.basePath, item.slug)}
-                  className="group inline-flex items-center gap-1.5 rounded-full border border-brand-border/70 bg-white px-4 py-2.5 text-sm font-medium text-brand-body transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-primary/50 hover:bg-brand-primary hover:text-white hover:shadow-md"
-                >
-                  {item.label}
-                  <ArrowRight className="size-3.5 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
-                </Link>
-              ))}
+              {current.items.map((item) =>
+                isComingSoon(current.key, item.slug) ? (
+                  <span
+                    key={item.slug}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-brand-border/40 bg-brand-gray/60 px-4 py-2.5 text-sm font-medium text-brand-light cursor-default select-none"
+                  >
+                    {item.label}
+                    <span className="rounded-full bg-brand-orange/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-orange">
+                      Soon
+                    </span>
+                  </span>
+                ) : (
+                  <Link
+                    key={item.slug}
+                    href={resolveHref(current.key, current.basePath, item.slug)}
+                    className="group inline-flex items-center gap-1.5 rounded-full border border-brand-border/70 bg-white px-4 py-2.5 text-sm font-medium text-brand-body transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-primary/50 hover:bg-brand-primary hover:text-white hover:shadow-md"
+                  >
+                    {item.label}
+                    <ArrowRight className="size-3.5 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
+                  </Link>
+                )
+              )}
             </motion.div>
           </AnimatePresence>
         </div>

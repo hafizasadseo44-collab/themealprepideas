@@ -36,7 +36,9 @@ export type RecipeRow = {
   created_at: string;
   updated_at: string;
   show_ai_share: boolean;
+  author_id: string | null;
   recipe_pages?: { id: string; name: string; slug: string; route: string } | null;
+  profiles?: { id: string; full_name: string | null; avatar_url: string | null; bio: string | null; job_title: string | null; credentials: string | null; years_experience: number | null; expertise: string[] | null } | null;
 };
 
 export function recipeRowToRecipe(row: RecipeRow): Recipe {
@@ -76,6 +78,19 @@ export function recipeRowToRecipe(row: RecipeRow): Recipe {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     showAiShare: row.show_ai_share,
+    authorId: row.author_id ?? undefined,
+    author: row.profiles
+      ? {
+          id: row.profiles.id,
+          name: row.profiles.full_name ?? "The Meal Prep Ideas Team",
+          avatarUrl: row.profiles.avatar_url ?? null,
+          bio: row.profiles.bio ?? null,
+          jobTitle: row.profiles.job_title ?? null,
+          credentials: row.profiles.credentials ?? null,
+          yearsExperience: row.profiles.years_experience ?? null,
+          expertise: row.profiles.expertise ?? null,
+        }
+      : undefined,
     seo: {
       title: row.seo_title,
       description: row.seo_description,

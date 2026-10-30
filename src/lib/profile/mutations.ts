@@ -10,20 +10,52 @@ export async function updateOwnProfile(input: {
   fullName: string;
   bio: string;
   avatarUrl: string | null;
+  jobTitle: string;
+  credentials: string;
+  yearsExperience: string;
+  expertise: string;
+  websiteUrl: string;
+  twitterUrl: string;
+  instagramUrl: string;
+  facebookUrl: string;
+  pinterestUrl: string;
+  linkedinUrl: string;
+  youtubeUrl: string;
 }): Promise<ProfileActionResult> {
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Not signed in." };
 
+  const expertiseTags = input.expertise
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: input.fullName.trim() || null, bio: input.bio.trim() || null, avatar_url: input.avatarUrl })
+    .update({
+      full_name: input.fullName.trim() || null,
+      bio: input.bio.trim() || null,
+      avatar_url: input.avatarUrl,
+      job_title: input.jobTitle.trim() || null,
+      credentials: input.credentials.trim() || null,
+      years_experience: input.yearsExperience ? parseInt(input.yearsExperience, 10) : null,
+      expertise: expertiseTags.length > 0 ? expertiseTags : null,
+      website_url: input.websiteUrl.trim() || null,
+      twitter_url: input.twitterUrl.trim() || null,
+      instagram_url: input.instagramUrl.trim() || null,
+      facebook_url: input.facebookUrl.trim() || null,
+      pinterest_url: input.pinterestUrl.trim() || null,
+      linkedin_url: input.linkedinUrl.trim() || null,
+      youtube_url: input.youtubeUrl.trim() || null,
+    })
     .eq("id", profile.id);
 
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin");
   revalidatePath("/blog");
+  revalidatePath(`/authors/${profile.id}`);
   return { ok: true };
 }
 

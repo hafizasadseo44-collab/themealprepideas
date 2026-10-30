@@ -13,7 +13,9 @@ const RECIPE_SELECT = `
   calories, protein_grams, carbs_grams, fat_grams, tag, rating, rating_count, status,
   seo_title, seo_description, seo_og_image_url, canonical_url, focus_keyword,
   seo_noindex, seo_nofollow, created_at, updated_at, show_ai_share,
-  recipe_pages ( id, name, slug, route )
+  author_id,
+  recipe_pages ( id, name, slug, route ),
+  profiles ( id, full_name, avatar_url, bio, job_title, credentials, years_experience, expertise )
 `;
 
 /** Public: pages registry (Home/Vegan/Keto today, more can be added later). */
@@ -292,4 +294,49 @@ export async function getCommentsForModeration(): Promise<RecipeComment[]> {
     return [];
   }
   return (data as unknown as CommentRow[]).map(commentRowToComment);
+}
+
+// ─── Author public queries ────────────────────────────────────────────────────
+
+export type AuthorProfile = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  job_title: string | null;
+  credentials: string | null;
+  years_experience: number | null;
+  expertise: string[] | null;
+  website_url: string | null;
+  twitter_url: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  pinterest_url: string | null;
+  linkedin_url: string | null;
+  youtube_url: string | null;
+};
+
+const AUTHOR_SELECT = "id, full_name, avatar_url, bio, job_title, credentials, years_experience, expertise, website_url, twitter_url, instagram_url, facebook_url, pinterest_url, linkedin_url, youtube_url";
+
+export async function getAuthorById(authorId: string): Promise<AuthorProfile | null> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(AUTHOR_SELECT)
+    .eq("id", authorId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as AuthorProfile;
+}
+
+export async function getPublishedRecipesByAuthor(authorId: string): Promise<Recipe[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("recipes")
+    .select(RECIPE_SELECT)
+    .eq("author_id", authorId)
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as unknown as RecipeRow[]).map(recipeRowToRecipe);
 }

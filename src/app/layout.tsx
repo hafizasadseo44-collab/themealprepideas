@@ -3,6 +3,7 @@ import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import WelcomePopup from "@/components/layout/WelcomePopup";
 import { SavedRecipesProvider } from "@/components/account/SavedRecipesProvider";
 import { getCurrentCustomer } from "@/lib/customers/session";
 import { getSavedRecipeSlugs } from "@/lib/recipes/queries";
@@ -91,6 +92,7 @@ export default async function RootLayout({
           <Header customer={customer} menuGroups={menuGroups} />
           <main className="flex-1">{children}</main>
           <Footer />
+          <WelcomePopup />
         </SavedRecipesProvider>
       </body>
     </html>

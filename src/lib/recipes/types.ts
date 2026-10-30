@@ -71,6 +71,8 @@ export type Recipe = {
   createdAt: string;
   updatedAt: string;
   showAiShare: boolean;
+  authorId?: string;
+  author?: { id: string; name: string; avatarUrl: string | null; bio: string | null; jobTitle: string | null; credentials: string | null; yearsExperience: number | null; expertise: string[] | null };
   seo: {
     title: string | null;
     description: string | null;

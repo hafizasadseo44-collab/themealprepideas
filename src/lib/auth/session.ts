@@ -12,6 +12,18 @@ export type Profile = {
   avatar_url: string | null;
   bio: string | null;
   role: Role;
+  // E-E-A-T fields
+  job_title: string | null;
+  credentials: string | null;
+  years_experience: number | null;
+  expertise: string[] | null;
+  website_url: string | null;
+  twitter_url: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  pinterest_url: string | null;
+  linkedin_url: string | null;
+  youtube_url: string | null;
 };
 
 /**
@@ -29,7 +41,7 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, avatar_url, bio, role")
+    .select("id, email, full_name, avatar_url, bio, role, job_title, credentials, years_experience, expertise, website_url, twitter_url, instagram_url, facebook_url, pinterest_url, linkedin_url, youtube_url")
     .eq("id", user.id)
     .single();
 

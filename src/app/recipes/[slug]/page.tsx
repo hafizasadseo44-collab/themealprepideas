@@ -11,6 +11,7 @@ import RecipePrintCard from "@/components/recipes/RecipePrintCard";
 import AiShareSection from "@/components/recipes/AiShareSection";
 import RecipeComments from "@/components/recipes/RecipeComments";
 import RelatedRecipes from "@/components/recipes/RelatedRecipes";
+import RecipeAuthorCard from "@/components/recipes/RecipeAuthorCard";
 import { getRecipeBySlug, getRelatedRecipes, getAllPublishedRecipeSlugs, getApprovedComments } from "@/lib/recipes/queries";
 import { extractRecipeStructuredData, classifySection } from "@/lib/recipes/extract";
 import { getHeadings } from "@/lib/posts/types";
@@ -195,6 +196,7 @@ export default async function RecipePage({
                 time={timeFacts}
                 nutrition={nutritionFacts}
               />
+              {recipe.author && <RecipeAuthorCard author={recipe.author} />}
               <RecipeComments recipe={recipe} comments={comments} />
             </div>
 
