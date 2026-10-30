@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -9,17 +9,22 @@ import { getCurrentCustomer } from "@/lib/customers/session";
 import { getSavedRecipeSlugs } from "@/lib/recipes/queries";
 import { getHeaderMenu } from "@/lib/menu/queries";
 
-const dmSerif = DM_Serif_Display({
+const dmSerif = localFont({
+  src: "./fonts/dm-serif-display.woff2",
   variable: "--font-dm-serif",
-  subsets: ["latin"],
-  weight: "400",
   display: "swap",
+  weight: "400",
 });
 
-const jakarta = Plus_Jakarta_Sans({
+const jakarta = localFont({
+  src: [
+    { path: "./fonts/plus-jakarta-sans.woff2", weight: "400" },
+    { path: "./fonts/plus-jakarta-sans.woff2", weight: "500" },
+    { path: "./fonts/plus-jakarta-sans.woff2", weight: "600" },
+    { path: "./fonts/plus-jakarta-sans.woff2", weight: "700" },
+    { path: "./fonts/plus-jakarta-sans.woff2", weight: "800" },
+  ],
   variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
