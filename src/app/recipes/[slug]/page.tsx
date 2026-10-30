@@ -196,7 +196,18 @@ export default async function RecipePage({
                 time={timeFacts}
                 nutrition={nutritionFacts}
               />
-              {recipe.author && <RecipeAuthorCard author={recipe.author} />}
+              <RecipeAuthorCard
+                author={recipe.author ?? {
+                  id: "",
+                  name: "The Meal Prep Ideas Team",
+                  avatarUrl: null,
+                  bio: "Our team of meal prep enthusiasts and recipe developers is dedicated to helping you eat healthier, save time, and make the most of your week with practical, tested recipes.",
+                  jobTitle: "Meal Prep Experts",
+                  credentials: null,
+                  yearsExperience: null,
+                  expertise: null,
+                }}
+              />
               <RecipeComments recipe={recipe} comments={comments} />
             </div>
 

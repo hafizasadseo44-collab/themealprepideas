@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, Star, CalendarDays, ChefHat } from "lucide-react";
 import Container from "@/components/ui/Container";
 import type { Recipe } from "@/lib/recipes/types";
 
@@ -31,6 +31,27 @@ export default function RecipeHero({ recipe }: { recipe: Recipe }) {
           </h1>
 
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-brand-body sm:text-lg">{recipe.description}</p>
+
+          {/* Author + date byline */}
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-brand-light">
+            <span className="flex items-center gap-1.5">
+              <ChefHat className="size-4 text-brand-primary" />
+              <span className="font-semibold text-brand-body">
+                {recipe.author?.name ?? "The Meal Prep Ideas Team"}
+              </span>
+              {recipe.author?.jobTitle && (
+                <span className="text-brand-light">· {recipe.author.jobTitle}</span>
+              )}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="size-4" />
+              {new Date(recipe.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
+          </div>
         </motion.div>
 
         <motion.div
