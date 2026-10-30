@@ -25,6 +25,7 @@ import MediaPicker from "@/components/admin/media/MediaPicker";
 import Switch from "@/components/ui/Switch";
 import { createRecipe, updateRecipe, type RecipeInput } from "@/lib/recipes/mutations";
 import { slugify, type Recipe, type RecipePage, type RecipeStatus } from "@/lib/recipes/types";
+import type { AuthorProfile } from "@/lib/recipes/queries";
 import { sanitizeTiptapJson, type TiptapNode } from "@/lib/tiptap/inline-text";
 import { uploadImage, type MediaItem } from "@/lib/media/upload";
 import { optimizeImageBeforeUpload } from "@/lib/media/client-compress";
@@ -53,9 +54,11 @@ function numberOrNull(value: string): number | null {
 export default function RecipeEditor({
   recipe,
   page,
+  profiles = [],
 }: {
   recipe?: Recipe;
   page: RecipePage;
+  profiles?: Pick<AuthorProfile, "id" | "full_name" | "avatar_url" | "job_title">[];
 }) {
   const router = useRouter();
   const isEditing = !!recipe;
@@ -88,6 +91,7 @@ export default function RecipeEditor({
 
   const [status, setStatus] = useState<RecipeStatus>(recipe?.status ?? "draft");
   const [showAiShare, setShowAiShare] = useState(recipe?.showAiShare ?? true);
+  const [authorId, setAuthorId] = useState<string>(recipe?.authorId ?? "");
   const [seo, setSeo] = useState<SeoState>({
     seoTitle: recipe?.seo.title ?? "",
     seoDescription: recipe?.seo.description ?? "",
@@ -293,6 +297,7 @@ export default function RecipeEditor({
         seoNoindex: seo.noindex,
         seoNofollow: seo.nofollow,
         showAiShare,
+        authorId: authorId || null,
       };
     },
     [
@@ -317,6 +322,7 @@ export default function RecipeEditor({
       rating,
       seo,
       showAiShare,
+      authorId,
     ]
   );
 
@@ -530,6 +536,25 @@ export default function RecipeEditor({
           <div className="flex items-start gap-2 rounded-[12px] bg-brand-error/10 px-4 py-3 text-sm text-brand-error">
             <AlertCircle className="mt-0.5 size-4 shrink-0" />
             {error}
+          </div>
+        )}
+
+        {profiles.length > 0 && (
+          <div className="rounded-[18px] border border-brand-border/60 bg-white p-5">
+            <p className="mb-1 text-sm font-semibold text-brand-heading">Author</p>
+            <p className="mb-3 text-[11px] text-brand-light">Shown on the recipe page (E-E-A-T signal)</p>
+            <select
+              value={authorId}
+              onChange={(e) => setAuthorId(e.target.value)}
+              className="h-10 w-full rounded-[10px] border border-brand-border bg-white px-3 text-sm focus:border-brand-primary focus:outline-none"
+            >
+              <option value="">— No author —</option>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.full_name ?? "Unnamed"}{p.job_title ? ` · ${p.job_title}` : ""}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 

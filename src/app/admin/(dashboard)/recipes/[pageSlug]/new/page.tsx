@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
-import { getRecipePageBySlug } from "@/lib/recipes/queries";
+import { getRecipePageBySlug, getAllProfiles } from "@/lib/recipes/queries";
 import RecipeEditor from "@/components/admin/recipes/RecipeEditor";
 
 export const metadata: Metadata = {
@@ -19,7 +19,10 @@ export default async function NewRecipePage({
   await requireRole(["admin", "editor"]);
   const { pageSlug } = await params;
 
-  const page = await getRecipePageBySlug(pageSlug);
+  const [page, profiles] = await Promise.all([
+    getRecipePageBySlug(pageSlug),
+    getAllProfiles(),
+  ]);
   if (!page) notFound();
 
   return (
@@ -31,7 +34,7 @@ export default async function NewRecipePage({
         <ArrowLeft className="size-4" />
         Back to {page.name}
       </Link>
-      <RecipeEditor page={page} />
+      <RecipeEditor page={page} profiles={profiles} />
     </div>
   );
 }

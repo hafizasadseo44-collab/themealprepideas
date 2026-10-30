@@ -36,11 +36,13 @@ export type RecipeInput = {
   seoNoindex: boolean;
   seoNofollow: boolean;
   showAiShare: boolean;
+  authorId?: string | null;
 };
 
 export type ActionResult = { ok: true; id: string } | { ok: false; error: string };
 
 function toRow(input: RecipeInput, authorId?: string) {
+  const resolvedAuthorId = input.authorId ?? authorId;
   return {
     title: input.title,
     slug: input.slug,
@@ -70,7 +72,7 @@ function toRow(input: RecipeInput, authorId?: string) {
     seo_noindex: input.seoNoindex,
     seo_nofollow: input.seoNofollow,
     show_ai_share: input.showAiShare,
-    ...(authorId ? { author_id: authorId } : {}),
+    ...(resolvedAuthorId !== undefined ? { author_id: resolvedAuthorId } : {}),
   };
 }
 
@@ -128,7 +130,7 @@ export async function updateRecipe(id: string, input: RecipeInput, isAutosave?: 
   const { data: existing } = await supabase.from("recipes").select("status").eq("id", id).maybeSingle();
   const wasPublished = existing?.status === "published";
 
-  const { error } = await supabase.from("recipes").update(toRow(input)).eq("id", id);
+  const { error } = await supabase.from("recipes").update(toRow(input, undefined)).eq("id", id);
   if (error) return { ok: false, error: error.message };
 
   if (!isAutosave) {

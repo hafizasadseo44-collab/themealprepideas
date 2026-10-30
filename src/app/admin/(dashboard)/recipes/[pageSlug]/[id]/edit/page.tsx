@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
-import { getRecipePageBySlug, getRecipeById } from "@/lib/recipes/queries";
+import { getRecipePageBySlug, getRecipeById, getAllProfiles } from "@/lib/recipes/queries";
 import RecipeEditor from "@/components/admin/recipes/RecipeEditor";
 import DeleteRecipeButton from "@/components/admin/recipes/DeleteRecipeButton";
 
@@ -20,10 +20,12 @@ export default async function EditRecipePage({
   await requireRole(["admin", "editor"]);
   const { pageSlug, id } = await params;
 
-  const page = await getRecipePageBySlug(pageSlug);
+  const [page, recipe, profiles] = await Promise.all([
+    getRecipePageBySlug(pageSlug),
+    getRecipeById(id),
+    getAllProfiles(),
+  ]);
   if (!page) notFound();
-
-  const recipe = await getRecipeById(id);
   if (!recipe) notFound();
 
   return (
@@ -41,7 +43,7 @@ export default async function EditRecipePage({
           Delete Recipe
         </DeleteRecipeButton>
       </div>
-      <RecipeEditor recipe={recipe} page={page} />
+      <RecipeEditor recipe={recipe} page={page} profiles={profiles} />
     </div>
   );
 }

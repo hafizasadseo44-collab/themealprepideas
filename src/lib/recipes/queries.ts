@@ -329,6 +329,17 @@ export async function getAuthorById(authorId: string): Promise<AuthorProfile | n
   return data as AuthorProfile;
 }
 
+/** Admin: all profiles — for the Author selector in the recipe editor. */
+export async function getAllProfiles(): Promise<Pick<AuthorProfile, "id" | "full_name" | "avatar_url" | "job_title">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url, job_title")
+    .order("full_name");
+  if (error || !data) return [];
+  return data as Pick<AuthorProfile, "id" | "full_name" | "avatar_url" | "job_title">[];
+}
+
 export async function getPublishedRecipesByAuthor(authorId: string): Promise<Recipe[]> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
