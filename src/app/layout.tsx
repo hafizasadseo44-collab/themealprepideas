@@ -41,13 +41,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "The Meal Prep Ideas",
     url: "https://themealprepideas.com",
-    images: [{ url: "https://themealprepideas.com/og-home.jpg", width: 1200, height: 630, alt: "The Meal Prep Ideas — 100+ Easy Meal Prep Recipes" }],
+    images: [{ url: "https://themealprepideas.com/og-home.webp", width: 1734, height: 907, alt: "The Meal Prep Ideas — 100+ Easy Meal Prep Recipes" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "100+ Easy Meal Prep Ideas | The Meal Prep Ideas",
     description: "100+ easy meal prep ideas for breakfast, lunch, dinner and more. Simple, make-ahead recipes with real photos.",
-    images: ["https://themealprepideas.com/og-home.jpg"],
+    images: ["https://themealprepideas.com/og-home.webp"],
   },
 };
 
