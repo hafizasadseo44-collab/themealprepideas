@@ -1,3 +1,10 @@
+export const SITE_SOCIALS = {
+  pinterest: "https://www.pinterest.com/themealprepideas/",
+  instagram: "https://www.instagram.com/themealprepideas/",
+  twitter: "https://x.com/themealprepidea",
+  facebook: "https://www.facebook.com/themealprepideas",
+} as const;
+
 export type Collection = {
   slug: string;
   title: string;

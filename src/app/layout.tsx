@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/layout/Header";
+import { SITE_SOCIALS } from "@/data/site";
 import Footer from "@/components/layout/Footer";
 import WelcomePopup from "@/components/layout/WelcomePopup";
 import { SavedRecipesProvider } from "@/components/account/SavedRecipesProvider";
@@ -62,7 +63,7 @@ const organizationSchema = {
     width: 512,
     height: 512,
   },
-  sameAs: [],
+  sameAs: Object.values(SITE_SOCIALS),
 };
 
 const websiteSchema = {
