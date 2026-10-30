@@ -31,19 +31,36 @@ export default function SetPasswordPage() {
       return;
     }
 
-    // Supabase puts tokens in the URL hash on invite/recovery links.
-    // The client SDK picks them up automatically on mount.
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setSessionReady(true);
-    });
 
-    // Also listen for auth state change (tokens parsed from hash)
+    // Register listener FIRST so we don't miss the event
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY" || event === "USER_UPDATED") {
         setSessionReady(true);
       }
     });
+
+    // Supabase may not auto-exchange invite tokens from hash — do it explicitly.
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
+
+    if (accessToken) {
+      // Exchange the tokens; this fires onAuthStateChange with SIGNED_IN
+      supabase.auth
+        .setSession({ access_token: accessToken, refresh_token: refreshToken ?? "" })
+        .then(({ data, error }) => {
+          if (!error && data.session) setSessionReady(true);
+          else if (error) setLinkError("Invalid or expired invite link. Please ask an admin to resend.");
+        });
+    } else {
+      // No hash tokens — check if a session already exists (e.g. page refresh)
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) setSessionReady(true);
+        else setLinkError("No invite token found. Please use the link from your invitation email.");
+      });
+    }
+
     return () => listener.subscription.unsubscribe();
   }, []);
 
