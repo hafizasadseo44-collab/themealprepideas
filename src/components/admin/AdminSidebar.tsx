@@ -15,25 +15,39 @@ import {
   Menu,
   type LucideIcon,
 } from "lucide-react";
-import type { Role } from "@/lib/auth/session";
+import type { Profile, EditorPermissions } from "@/lib/auth/session";
+import { getEffectivePermissions } from "@/lib/auth/session";
 
-type NavItem = { label: string; href: string; icon: LucideIcon; roles: Role[] };
+type NavItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  adminOnly?: boolean;
+  permission?: keyof EditorPermissions;
+};
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard, roles: ["admin", "editor"] },
-  { label: "Posts", href: "/admin/posts", icon: FileText, roles: ["admin", "editor"] },
-  { label: "Recipes", href: "/admin/recipes", icon: UtensilsCrossed, roles: ["admin", "editor"] },
-  { label: "Comments", href: "/admin/comments", icon: MessageCircle, roles: ["admin", "editor"] },
-  { label: "Messages", href: "/admin/messages", icon: Mail, roles: ["admin", "editor"] },
-  { label: "Categories", href: "/admin/categories", icon: FolderKanban, roles: ["admin", "editor"] },
-  { label: "Header Menu", href: "/admin/menu", icon: Menu, roles: ["admin", "editor"] },
-  { label: "Media", href: "/admin/media", icon: ImageIcon, roles: ["admin", "editor"] },
-  { label: "Users", href: "/admin/users", icon: Users, roles: ["admin"] },
+  { label: "Dashboard",   href: "/admin",           icon: LayoutDashboard },
+  { label: "Posts",       href: "/admin/posts",     icon: FileText,       permission: "can_posts" },
+  { label: "Recipes",     href: "/admin/recipes",   icon: UtensilsCrossed, permission: "can_recipes" },
+  { label: "Comments",    href: "/admin/comments",  icon: MessageCircle,  permission: "can_comments" },
+  { label: "Messages",    href: "/admin/messages",  icon: Mail,           adminOnly: true },
+  { label: "Categories",  href: "/admin/categories",icon: FolderKanban,   adminOnly: true },
+  { label: "Header Menu", href: "/admin/menu",      icon: Menu,           adminOnly: true },
+  { label: "Media",       href: "/admin/media",     icon: ImageIcon,      permission: "can_media" },
+  { label: "Users",       href: "/admin/users",     icon: Users,          adminOnly: true },
 ];
 
-export default function AdminSidebar({ role, onNavigate }: { role: Role; onNavigate?: () => void }) {
+export default function AdminSidebar({ profile, onNavigate }: { profile: Profile; onNavigate?: () => void }) {
   const pathname = usePathname();
-  const items = navItems.filter((item) => item.roles.includes(role));
+  const perms = getEffectivePermissions(profile);
+  const isAdmin = profile.role === "admin";
+
+  const items = navItems.filter((item) => {
+    if (item.adminOnly) return isAdmin;
+    if (item.permission) return isAdmin || perms[item.permission];
+    return true; // Dashboard always visible
+  });
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-brand-border/60 bg-white">

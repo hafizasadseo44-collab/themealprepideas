@@ -5,6 +5,22 @@ import { createClient } from "@/lib/supabase/server";
 
 export type Role = "admin" | "editor";
 
+export type EditorPermissions = {
+  can_posts: boolean;
+  can_recipes: boolean;
+  can_comments: boolean;
+  can_media: boolean;
+  can_publish: boolean;
+};
+
+export const DEFAULT_PERMISSIONS: EditorPermissions = {
+  can_posts: true,
+  can_recipes: true,
+  can_comments: true,
+  can_media: true,
+  can_publish: true,
+};
+
 export type Profile = {
   id: string;
   email: string;
@@ -12,6 +28,7 @@ export type Profile = {
   avatar_url: string | null;
   bio: string | null;
   role: Role;
+  permissions: EditorPermissions | null;
   // E-E-A-T fields
   job_title: string | null;
   credentials: string | null;
@@ -25,6 +42,12 @@ export type Profile = {
   linkedin_url: string | null;
   youtube_url: string | null;
 };
+
+/** Returns effective permissions: admins always have everything. */
+export function getEffectivePermissions(profile: Profile): EditorPermissions {
+  if (profile.role === "admin") return DEFAULT_PERMISSIONS;
+  return { ...DEFAULT_PERMISSIONS, ...(profile.permissions ?? {}) };
+}
 
 /**
  * Reads the current signed-in user's profile (id, role, display info).
@@ -41,7 +64,7 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, avatar_url, bio, role, job_title, credentials, years_experience, expertise, website_url, twitter_url, instagram_url, facebook_url, pinterest_url, linkedin_url, youtube_url")
+    .select("id, email, full_name, avatar_url, bio, role, permissions, job_title, credentials, years_experience, expertise, website_url, twitter_url, instagram_url, facebook_url, pinterest_url, linkedin_url, youtube_url")
     .eq("id", user.id)
     .single();
 

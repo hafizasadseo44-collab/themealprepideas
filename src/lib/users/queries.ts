@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { Role } from "@/lib/auth/session";
+import type { Role, EditorPermissions } from "@/lib/auth/session";
 
 export type StaffUser = {
   id: string;
@@ -8,6 +8,7 @@ export type StaffUser = {
   fullName: string | null;
   avatarUrl: string | null;
   role: Role;
+  permissions: EditorPermissions | null;
   createdAt: string;
 };
 
@@ -15,7 +16,7 @@ export async function getAllUsers(): Promise<StaffUser[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, avatar_url, role, created_at")
+    .select("id, email, full_name, avatar_url, role, permissions, created_at")
     .order("created_at", { ascending: true });
 
   if (error || !data) return [];
@@ -25,6 +26,7 @@ export async function getAllUsers(): Promise<StaffUser[]> {
     fullName: row.full_name,
     avatarUrl: row.avatar_url,
     role: row.role,
+    permissions: (row.permissions as EditorPermissions | null) ?? null,
     createdAt: row.created_at,
   }));
 }

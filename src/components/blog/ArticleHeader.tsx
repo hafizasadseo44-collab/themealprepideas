@@ -31,21 +31,39 @@ export default function ArticleHeader({ post }: { post: BlogPost }) {
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-brand-body sm:text-lg">{post.excerpt}</p>
 
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <div className="flex items-center gap-2.5">
-              <div className="relative size-10 shrink-0 overflow-hidden rounded-full bg-brand-primary/12">
-                {post.author.avatar ? (
-                  <Image src={post.author.avatar} alt={post.author.name} fill sizes="40px" className="object-cover" />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-brand-primary-dark">
-                    {post.author.name.charAt(0).toUpperCase()}
-                  </span>
-                )}
+            {post.authorId ? (
+              <Link href={`/authors/${post.authorId}`} className="group flex items-center gap-2.5">
+                <div className="relative size-10 shrink-0 overflow-hidden rounded-full bg-brand-primary/12 ring-2 ring-brand-primary/20 transition-all group-hover:ring-brand-primary/60">
+                  {post.author.avatar ? (
+                    <Image src={post.author.avatar} alt={post.author.name} fill sizes="40px" className="object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-brand-primary-dark">
+                      {post.author.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold text-brand-heading transition-colors group-hover:text-brand-primary-dark">{post.author.name}</p>
+                  <p className="text-xs text-brand-light">Author</p>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-2.5">
+                <div className="relative size-10 shrink-0 overflow-hidden rounded-full bg-brand-primary/12">
+                  {post.author.avatar ? (
+                    <Image src={post.author.avatar} alt={post.author.name} fill sizes="40px" className="object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-brand-primary-dark">
+                      {post.author.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold text-brand-heading">{post.author.name}</p>
+                  <p className="text-xs text-brand-light">Author</p>
+                </div>
               </div>
-              <div className="leading-tight">
-                <p className="text-sm font-semibold text-brand-heading">{post.author.name}</p>
-                <p className="text-xs text-brand-light">Author</p>
-              </div>
-            </div>
+            )}
             <span className="flex items-center gap-1.5 text-sm text-brand-light">
               <Calendar className="size-4" />
               {post.date}

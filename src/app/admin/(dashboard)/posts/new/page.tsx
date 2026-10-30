@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getCategories } from "@/lib/posts/queries";
+import { getCategories, getAllProfilesForSelect } from "@/lib/posts/queries";
 import PostEditor from "@/components/admin/posts/editor/PostEditor";
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewPostPage() {
-  const categories = await getCategories();
+  const [categories, profiles] = await Promise.all([getCategories(), getAllProfilesForSelect()]);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -18,7 +18,7 @@ export default async function NewPostPage() {
         <ArrowLeft className="size-4" />
         Back to Posts
       </Link>
-      <PostEditor categories={categories} />
+      <PostEditor categories={categories} profiles={profiles} />
     </div>
   );
 }

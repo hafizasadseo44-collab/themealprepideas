@@ -50,6 +50,7 @@ export function postRowToBlogPost(row: PostRow): BlogPost {
     readTime: formatReadTime(row.minutes),
     minutes: row.minutes ?? 3,
     date: formatDate(row.published_at ?? row.created_at),
+    authorId: row.author_id,
     author: {
       name: row.profiles?.full_name || row.profiles?.email?.split("@")[0] || "Unknown",
       avatar: row.profiles?.avatar_url || "",

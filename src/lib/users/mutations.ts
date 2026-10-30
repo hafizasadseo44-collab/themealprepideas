@@ -4,11 +4,15 @@ import { revalidatePath } from "next/cache";
 import { getCurrentProfile, requireRole } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { Role } from "@/lib/auth/session";
+import type { Role, EditorPermissions } from "@/lib/auth/session";
 
 export type UserActionResult = { ok: true } | { ok: false; error: string };
 
-export async function inviteUser(email: string, role: Role): Promise<UserActionResult> {
+export async function inviteUser(
+  email: string,
+  role: Role,
+  permissions?: EditorPermissions
+): Promise<UserActionResult> {
   await requireRole(["admin"]);
   if (!email.trim()) return { ok: false, error: "Email is required." };
 
@@ -19,10 +23,28 @@ export async function inviteUser(email: string, role: Role): Promise<UserActionR
 
   if (error || !data.user) return { ok: false, error: error?.message ?? "Could not send invite." };
 
-  if (role === "admin") {
-    const supabase = await createClient();
-    await supabase.from("profiles").update({ role: "admin" }).eq("id", data.user.id);
+  const supabase = await createClient();
+  const updates: Record<string, unknown> = {};
+  if (role === "admin") updates.role = "admin";
+  if (permissions && role === "editor") updates.permissions = permissions;
+  if (Object.keys(updates).length > 0) {
+    await supabase.from("profiles").update(updates).eq("id", data.user.id);
   }
+
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+export async function updateUserPermissions(
+  id: string,
+  permissions: EditorPermissions
+): Promise<UserActionResult> {
+  const me = await requireRole(["admin"]);
+  if (me.id === id) return { ok: false, error: "Cannot change your own permissions." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ permissions }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/users");
   return { ok: true };

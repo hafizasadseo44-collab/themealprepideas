@@ -43,6 +43,7 @@ export type BlogPost = {
   readTime: string;
   minutes: number;
   date: string;
+  authorId: string | null;
   author: { name: string; avatar: string; bio?: string };
   tags: string[];
   trending?: boolean;

@@ -28,11 +28,14 @@ export type PostInput = {
   focusKeyword: string | null;
   seoNoindex: boolean;
   seoNofollow: boolean;
+  authorId?: string | null;
+  coAuthorIds?: string[];
 };
 
 export type ActionResult = { ok: true; id: string } | { ok: false; error: string };
 
-function toRow(input: PostInput, authorId?: string) {
+function toRow(input: PostInput, authorId?: string, authorIdOverride?: string | null) {
+  const resolvedAuthorId = authorIdOverride !== undefined ? authorIdOverride : authorId;
   const publishedAt =
     input.status === "published"
       ? new Date().toISOString()
@@ -62,7 +65,7 @@ function toRow(input: PostInput, authorId?: string) {
     focus_keyword: input.focusKeyword,
     seo_noindex: input.seoNoindex,
     seo_nofollow: input.seoNofollow,
-    ...(authorId ? { author_id: authorId } : {}),
+    ...(resolvedAuthorId ? { author_id: resolvedAuthorId } : {}),
   };
 }
 
@@ -74,13 +77,22 @@ export async function createPost(input: PostInput, isAutosave?: boolean): Promis
     await supabase.from("posts").update({ featured: false }).eq("featured", true);
   }
 
+  const effectiveAuthorId = input.authorId !== undefined ? input.authorId : profile.id;
   const { data, error } = await supabase
     .from("posts")
-    .insert(toRow(input, profile.id))
+    .insert(toRow(input, undefined, effectiveAuthorId))
     .select("id")
     .single();
 
   if (error || !data) return { ok: false, error: error?.message ?? "Could not create post." };
+
+  // Save co-authors
+  if (!isAutosave && input.coAuthorIds && input.coAuthorIds.length > 0) {
+    await supabase.from("post_co_authors").delete().eq("post_id", data.id);
+    await supabase.from("post_co_authors").insert(
+      input.coAuthorIds.map((profile_id) => ({ post_id: data.id, profile_id }))
+    );
+  }
 
   if (!isAutosave) {
     revalidatePath("/admin/posts");
@@ -109,8 +121,19 @@ export async function updatePost(id: string, input: PostInput, isAutosave?: bool
   const { data: existing } = await supabase.from("posts").select("status").eq("id", id).maybeSingle();
   const wasPublished = existing?.status === "published";
 
-  const { error } = await supabase.from("posts").update(toRow(input)).eq("id", id);
+  const authorRow = input.authorId !== undefined ? toRow(input, undefined, input.authorId) : toRow(input);
+  const { error } = await supabase.from("posts").update(authorRow).eq("id", id);
   if (error) return { ok: false, error: error.message };
+
+  // Sync co-authors (always replace when not autosave)
+  if (!isAutosave && input.coAuthorIds !== undefined) {
+    await supabase.from("post_co_authors").delete().eq("post_id", id);
+    if (input.coAuthorIds.length > 0) {
+      await supabase.from("post_co_authors").insert(
+        input.coAuthorIds.map((profile_id) => ({ post_id: id, profile_id }))
+      );
+    }
+  }
 
   if (!isAutosave) {
     revalidatePath("/admin/posts");

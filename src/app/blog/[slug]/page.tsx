@@ -6,9 +6,10 @@ import ArticleHeader from "@/components/blog/ArticleHeader";
 import ArticleContent from "@/components/blog/ArticleContent";
 import { DesktopTOC, MobileTOC } from "@/components/blog/ArticleTOC";
 import AuthorCard from "@/components/blog/AuthorCard";
+import CoAuthors from "@/components/blog/CoAuthors";
 import RelatedArticles from "@/components/blog/RelatedArticles";
 import Newsletter from "@/components/home/Newsletter";
-import { getPostBySlug, getRelatedPosts, getPublishedPosts } from "@/lib/posts/queries";
+import { getPostBySlug, getRelatedPosts, getPublishedPosts, getPostCoAuthors } from "@/lib/posts/queries";
 import { getHeadings } from "@/lib/posts/types";
 
 export async function generateStaticParams() {
@@ -49,7 +50,10 @@ export default async function ArticlePage({
   if (!post) notFound();
 
   const headings = getHeadings(post.content);
-  const related = await getRelatedPosts(post.slug, 3);
+  const [related, coAuthors] = await Promise.all([
+    getRelatedPosts(post.slug, 3),
+    getPostCoAuthors(post.id),
+  ]);
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -87,7 +91,8 @@ export default async function ArticlePage({
             <div className="mx-auto w-full max-w-[720px] lg:mx-0">
               <MobileTOC headings={headings} />
               <ArticleContent content={post.content} />
-              <AuthorCard author={post.author} />
+              <AuthorCard author={post.author} authorId={post.authorId} />
+              {coAuthors.length > 0 && <CoAuthors authors={coAuthors} />}
             </div>
 
             <DesktopTOC headings={headings} />

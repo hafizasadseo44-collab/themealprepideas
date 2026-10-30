@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ChefHat, UtensilsCrossed, ArrowLeft,
+  ChefHat, BookOpen, UtensilsCrossed, ArrowLeft,
   Award, Star, Briefcase, ExternalLink,
 } from "lucide-react";
 import Container from "@/components/ui/Container";

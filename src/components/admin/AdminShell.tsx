@@ -12,14 +12,14 @@ export default function AdminShell({ profile, children }: { profile: Profile; ch
   return (
     <div className="flex min-h-screen bg-brand-gray/40">
       <div className="hidden lg:block">
-        <AdminSidebar role={profile.role} />
+        <AdminSidebar profile={profile} />
       </div>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
           <div className="absolute left-0 top-0 h-full shadow-2xl">
-            <AdminSidebar role={profile.role} onNavigate={() => setMobileOpen(false)} />
+            <AdminSidebar profile={profile} onNavigate={() => setMobileOpen(false)} />
           </div>
           <button
             type="button"

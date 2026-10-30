@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { getPostById, getCategories } from "@/lib/posts/queries";
+import { getPostById, getCategories, getAllProfilesForSelect, getPostCoAuthorIds } from "@/lib/posts/queries";
 import PostEditor from "@/components/admin/posts/editor/PostEditor";
 
 export const metadata: Metadata = {
@@ -12,7 +12,12 @@ export const metadata: Metadata = {
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [post, categories] = await Promise.all([getPostById(id), getCategories()]);
+  const [post, categories, profiles, coAuthorIds] = await Promise.all([
+    getPostById(id),
+    getCategories(),
+    getAllProfilesForSelect(),
+    getPostCoAuthorIds(id),
+  ]);
 
   if (!post) notFound();
 
@@ -22,7 +27,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
         <ArrowLeft className="size-4" />
         Back to Posts
       </Link>
-      <PostEditor post={post} categories={categories} />
+      <PostEditor post={post} categories={categories} profiles={profiles} initialCoAuthorIds={coAuthorIds} />
     </div>
   );
 }

@@ -103,6 +103,46 @@ export async function getPublishedPostsByAuthor(authorId: string): Promise<BlogP
   return (data as unknown as PostRow[]).map(postRowToBlogPost);
 }
 
+export type CoAuthor = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  job_title: string | null;
+};
+
+/** Fetch co-authors for a single post (public). */
+export async function getPostCoAuthors(postId: string): Promise<CoAuthor[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("post_co_authors")
+    .select("profiles ( id, full_name, avatar_url, job_title )")
+    .eq("post_id", postId);
+  if (error || !data) return [];
+  return (data as unknown as { profiles: CoAuthor }[]).map((r) => r.profiles).filter(Boolean);
+}
+
+/** Admin: all profiles for author select dropdown. */
+export async function getAllProfilesForSelect(): Promise<Pick<CoAuthor, "id" | "full_name" | "avatar_url" | "job_title">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url, job_title")
+    .order("full_name");
+  if (error || !data) return [];
+  return data as Pick<CoAuthor, "id" | "full_name" | "avatar_url" | "job_title">[];
+}
+
+/** Admin: get co-author profile ids for a post. */
+export async function getPostCoAuthorIds(postId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("post_co_authors")
+    .select("profile_id")
+    .eq("post_id", postId);
+  if (error || !data) return [];
+  return data.map((r) => r.profile_id as string);
+}
+
 /** Minimal slug + timestamp list for sitemap.ts — avoids fetching full post bodies. */
 export async function getSitemapPosts(): Promise<{ slug: string; updatedAt: string }[]> {
   const supabase = createPublicClient();

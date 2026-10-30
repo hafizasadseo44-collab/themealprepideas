@@ -35,7 +35,19 @@ function timeAgo(date: Date) {
   return `${minutes}m ago`;
 }
 
-export default function PostEditor({ post, categories }: { post?: BlogPost; categories: Category[] }) {
+type AuthorProfile = { id: string; full_name: string | null; avatar_url: string | null; job_title: string | null };
+
+export default function PostEditor({
+  post,
+  categories,
+  profiles = [],
+  initialCoAuthorIds = [],
+}: {
+  post?: BlogPost;
+  categories: Category[];
+  profiles?: AuthorProfile[];
+  initialCoAuthorIds?: string[];
+}) {
   const router = useRouter();
   const isEditing = !!post;
 
@@ -65,6 +77,11 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
     noindex: post?.seo.noindex ?? false,
     nofollow: post?.seo.nofollow ?? false,
   });
+  // Author & co-authors
+  const [authorId, setAuthorId] = useState<string>(post?.author ? (profiles.find((p) => p.full_name === post.author.name)?.id ?? "") : "");
+  const [coAuthorIds, setCoAuthorIds] = useState<string[]>(initialCoAuthorIds);
+  const [coAuthorSearch, setCoAuthorSearch] = useState("");
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -240,9 +257,11 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
         focusKeyword: seo.focusKeyword || null,
         seoNoindex: seo.noindex,
         seoNofollow: seo.nofollow,
+        authorId: authorId || null,
+        coAuthorIds,
       };
     },
-    [editor, title, slug, excerpt, coverImageUrl, coverImageAlt, categoryId, scheduledFor, tags, trending, featured, seo]
+    [editor, title, slug, excerpt, coverImageUrl, coverImageAlt, categoryId, scheduledFor, tags, trending, featured, seo, authorId, coAuthorIds]
   );
 
   // Core autosave — shared by the interval and the debounced editor listener.
@@ -431,6 +450,77 @@ export default function PostEditor({ post, categories }: { post?: BlogPost; cate
           <div className="flex items-start gap-2 rounded-[12px] bg-brand-error/10 px-4 py-3 text-sm text-brand-error">
             <AlertCircle className="mt-0.5 size-4 shrink-0" />
             {error}
+          </div>
+        )}
+
+        {/* Author & Co-authors panel */}
+        {profiles.length > 0 && (
+          <div className="rounded-[18px] border border-brand-border/60 bg-white p-5">
+            <p className="mb-1 text-sm font-semibold text-brand-heading">Author</p>
+            <p className="mb-3 text-[11px] text-brand-light">Byline shown on the article page (E-E-A-T signal)</p>
+            <select
+              value={authorId}
+              onChange={(e) => setAuthorId(e.target.value)}
+              className="h-10 w-full rounded-[10px] border border-brand-border bg-white px-3 text-sm focus:border-brand-primary focus:outline-none"
+            >
+              <option value="">— Assign to me (default) —</option>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.full_name ?? "Unnamed"}{p.job_title ? ` · ${p.job_title}` : ""}
+                </option>
+              ))}
+            </select>
+
+            <p className="mt-4 mb-2 text-[11px] font-semibold text-brand-heading">Co-Authors</p>
+            <p className="mb-2 text-[11px] text-brand-light">Search and add collaborating authors</p>
+            <input
+              type="text"
+              value={coAuthorSearch}
+              onChange={(e) => setCoAuthorSearch(e.target.value)}
+              placeholder="Search authors…"
+              className="h-9 w-full rounded-[10px] border border-brand-border bg-white px-3 text-xs focus:border-brand-primary focus:outline-none"
+            />
+            {coAuthorSearch.trim() && (
+              <div className="mt-1 overflow-hidden rounded-[10px] border border-brand-border/60 bg-white shadow-sm">
+                {profiles
+                  .filter((p) => !coAuthorIds.includes(p.id) && p.id !== (authorId || undefined))
+                  .filter((p) => (p.full_name ?? "").toLowerCase().includes(coAuthorSearch.toLowerCase()))
+                  .slice(0, 5)
+                  .map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => { setCoAuthorIds((prev) => [...prev, p.id]); setCoAuthorSearch(""); }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-brand-gray"
+                    >
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[10px] font-bold text-brand-primary-dark">
+                        {(p.full_name ?? "?").charAt(0)}
+                      </span>
+                      <span>{p.full_name ?? "Unnamed"}</span>
+                      {p.job_title && <span className="text-brand-light">· {p.job_title}</span>}
+                    </button>
+                  ))}
+                {profiles.filter((p) => !coAuthorIds.includes(p.id) && (p.full_name ?? "").toLowerCase().includes(coAuthorSearch.toLowerCase())).length === 0 && (
+                  <p className="px-3 py-2 text-xs text-brand-light">No authors found</p>
+                )}
+              </div>
+            )}
+            {coAuthorIds.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {coAuthorIds.map((id) => {
+                  const p = profiles.find((pr) => pr.id === id);
+                  if (!p) return null;
+                  return (
+                    <span key={id} className="inline-flex items-center gap-1 rounded-full bg-brand-primary/10 px-2.5 py-1 text-[11px] font-medium text-brand-primary-dark">
+                      {p.full_name ?? "Unnamed"}
+                      <button type="button" onClick={() => setCoAuthorIds((prev) => prev.filter((x) => x !== id))} className="ml-0.5">
+                        <X className="size-3" />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
