@@ -63,6 +63,8 @@ export default function AddRecipeModal({
       heroImageUrl: imageUrl,
       heroImageAlt: imageAlt.trim() || title.trim(),
       pageId,
+      pageSlug: null,
+      pageRoute: null,
       sectionIds: sectionId ? [sectionId] : [],
       prepTimeMinutes: null,
       cookTimeMinutes: null,

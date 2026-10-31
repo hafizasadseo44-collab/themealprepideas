@@ -270,6 +270,8 @@ export default function RecipeEditor({
         heroImageUrl,
         heroImageAlt: heroImageAlt.trim() || null,
         pageId: page.id,
+        pageSlug: page.slug,
+        pageRoute: page.route,
         sectionIds: recipe?.sectionIds ?? [],
         prepTimeMinutes: prep,
         cookTimeMinutes: cook,
@@ -337,7 +339,7 @@ export default function RecipeEditor({
     autosaveInProgressRef.current = true;
     setAutosaveStatus("saving");
     const result = currentIdRef.current
-      ? await updateRecipe(currentIdRef.current, input, true)
+      ? await updateRecipe(currentIdRef.current, input, true, savedStatusRef.current === "published")
       : await createRecipe(input, true);
     autosaveInProgressRef.current = false;
 
@@ -408,7 +410,9 @@ export default function RecipeEditor({
     if (!input) return setError("Slug is required.");
 
     setSaving(true);
-    const result = currentId ? await updateRecipe(currentId, input, false) : await createRecipe(input, false);
+    const result = currentId
+      ? await updateRecipe(currentId, input, false, savedStatusRef.current === "published")
+      : await createRecipe(input, false);
     setSaving(false);
 
     if (!result.ok) return setError(result.error);

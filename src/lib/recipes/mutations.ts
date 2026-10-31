@@ -14,6 +14,8 @@ export type RecipeInput = {
   heroImageUrl: string | null;
   heroImageAlt: string | null;
   pageId: string | null;
+  pageSlug: string | null;
+  pageRoute: string | null;
   sectionIds: string[];
   prepTimeMinutes: number | null;
   cookTimeMinutes: number | null;
@@ -76,16 +78,17 @@ function toRow(input: RecipeInput, authorId?: string) {
   };
 }
 
-async function revalidateForRecipe(slug: string, pageId: string | null, isPublished: boolean = true) {
+async function revalidateForRecipe(
+  slug: string,
+  pageSlug: string | null,
+  pageRoute: string | null,
+  isPublished: boolean = true
+) {
   revalidatePath("/admin/recipes");
-  if (pageId) {
-    const supabase = await createClient();
-    const { data } = await supabase.from("recipe_pages").select("route, slug").eq("id", pageId).maybeSingle();
-    if (data) {
-      revalidatePath(`/admin/recipes/${data.slug}`);
-      if (isPublished) {
-        revalidatePath(data.route);
-      }
+  if (pageSlug) {
+    revalidatePath(`/admin/recipes/${pageSlug}`);
+    if (isPublished && pageRoute) {
+      revalidatePath(pageRoute);
     }
   }
   if (isPublished) {
@@ -110,7 +113,7 @@ export async function createRecipe(input: RecipeInput, isAutosave?: boolean): Pr
   if (error || !data) return { ok: false, error: error?.message ?? "Could not create recipe." };
 
   if (!isAutosave) {
-    await revalidateForRecipe(input.slug, input.pageId, input.status === "published");
+    await revalidateForRecipe(input.slug, input.pageSlug, input.pageRoute, input.status === "published");
   }
 
   if (input.status === "published") {
@@ -126,18 +129,25 @@ export async function createRecipe(input: RecipeInput, isAutosave?: boolean): Pr
   return { ok: true, id: data.id };
 }
 
-export async function updateRecipe(id: string, input: RecipeInput, isAutosave?: boolean): Promise<ActionResult> {
+export async function updateRecipe(
+  id: string,
+  input: RecipeInput,
+  isAutosave?: boolean,
+  wasPublished?: boolean
+): Promise<ActionResult> {
   await requireRole(["admin", "editor"]);
   const supabase = await createClient();
-
-  const { data: existing } = await supabase.from("recipes").select("status").eq("id", id).maybeSingle();
-  const wasPublished = existing?.status === "published";
 
   const { error } = await supabase.from("recipes").update(toRow(input, undefined)).eq("id", id);
   if (error) return { ok: false, error: error.message };
 
   if (!isAutosave) {
-    await revalidateForRecipe(input.slug, input.pageId, wasPublished || input.status === "published");
+    await revalidateForRecipe(
+      input.slug,
+      input.pageSlug,
+      input.pageRoute,
+      (wasPublished ?? false) || input.status === "published"
+    );
   }
 
   if (!wasPublished && input.status === "published") {
@@ -159,7 +169,7 @@ export async function deleteRecipe(id: string, slug: string, pageId: string | nu
   const { error } = await supabase.from("recipes").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
 
-  await revalidateForRecipe(slug, pageId);
+  await revalidateForRecipe(slug, null, null);
   return { ok: true, id };
 }
 
