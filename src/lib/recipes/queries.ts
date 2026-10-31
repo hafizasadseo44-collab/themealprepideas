@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { recipeRowToRecipe, toLiveCardRecipe, type RecipeRow } from "@/lib/recipes/mappers";
 import type { Recipe, RecipePage, RecipeSection, RecipeComment } from "@/lib/recipes/types";
@@ -177,10 +178,14 @@ export async function getRelatedRecipes(recipe: Recipe, count = 3): Promise<Reci
   return (data as unknown as RecipeRow[]).map(recipeRowToRecipe);
 }
 
-/** Admin: all recipes for a page — admins see everyone's, editors only their own. */
+/** Admin: all recipes for a page — admins see everyone's, editors only their own.
+ *  Uses the service-role client so RLS never blocks the read regardless of
+ *  how the calling user's session is resolved on the host. */
 export async function getRecipesForPageAdmin(pageId: string): Promise<Recipe[]> {
   const profile = await getCurrentProfile();
-  const supabase = await createClient();
+  // Service-role bypasses RLS entirely — safe here because this function is
+  // server-only and we apply the editor filter ourselves in code.
+  const supabase = createAdminClient();
   let query = supabase.from("recipes").select(RECIPE_SELECT).eq("page_id", pageId).order("created_at", { ascending: true });
 
   if (profile && profile.role !== "admin") {
