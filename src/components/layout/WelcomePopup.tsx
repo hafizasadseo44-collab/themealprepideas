@@ -219,7 +219,7 @@ export default function WelcomePopup() {
 
                       {/* Sign up CTA */}
                       <a
-                        href="/sign-up"
+                        href="/account/signup?next=%2F"
                         className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#3fa34d]/30 bg-[#f0faf1] py-3 text-[14px] font-bold text-[#2e7d32] transition-all hover:border-[#3fa34d] hover:bg-[#e8f5e9] hover:shadow-md"
                       >
                         <Sparkles className="size-4 text-[#f59e0b]" />
