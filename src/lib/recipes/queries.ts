@@ -16,7 +16,7 @@ const RECIPE_SELECT = `
   seo_noindex, seo_nofollow, created_at, updated_at, show_ai_share,
   author_id,
   recipe_pages ( id, name, slug, route ),
-  profiles ( id, full_name, avatar_url, bio, job_title, credentials, years_experience, expertise )
+  profiles!author_id ( id, full_name, avatar_url, bio, job_title, credentials, years_experience, expertise )
 `;
 
 /** Public: pages registry (Home/Vegan/Keto today, more can be added later). */

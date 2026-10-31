@@ -12,7 +12,7 @@ const POST_SELECT = `
   created_at, updated_at, category_id,
   categories ( id, name, slug ),
   author_id,
-  profiles ( id, full_name, avatar_url, email, bio )
+  profiles!author_id ( id, full_name, avatar_url, email, bio )
 `;
 
 /** Public site: posts visible to everyone. Uses the cookie-less client since
