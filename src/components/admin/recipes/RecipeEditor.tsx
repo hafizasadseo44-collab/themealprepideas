@@ -338,9 +338,16 @@ export default function RecipeEditor({
 
     autosaveInProgressRef.current = true;
     setAutosaveStatus("saving");
-    const result = currentIdRef.current
-      ? await updateRecipe(currentIdRef.current, input, true, savedStatusRef.current === "published")
-      : await createRecipe(input, true);
+    let result: Awaited<ReturnType<typeof updateRecipe>>;
+    try {
+      result = currentIdRef.current
+        ? await updateRecipe(currentIdRef.current, input, true, savedStatusRef.current === "published")
+        : await createRecipe(input, true);
+    } catch {
+      autosaveInProgressRef.current = false;
+      setAutosaveStatus("error");
+      return;
+    }
     autosaveInProgressRef.current = false;
 
     if (!result.ok) {
@@ -410,16 +417,22 @@ export default function RecipeEditor({
     if (!input) return setError("Slug is required.");
 
     setSaving(true);
-    const result = currentId
-      ? await updateRecipe(currentId, input, false, savedStatusRef.current === "published")
-      : await createRecipe(input, false);
+    let result: Awaited<ReturnType<typeof updateRecipe>>;
+    try {
+      result = currentId
+        ? await updateRecipe(currentId, input, false, savedStatusRef.current === "published")
+        : await createRecipe(input, false);
+    } catch (err) {
+      setSaving(false);
+      setError(err instanceof Error ? err.message : "Save failed. Please try again.");
+      return;
+    }
     setSaving(false);
 
     if (!result.ok) return setError(result.error);
 
     savedStatusRef.current = status;
     router.push(`/admin/recipes/${page.slug}`);
-    router.refresh();
   };
 
   if (!editor) return null;

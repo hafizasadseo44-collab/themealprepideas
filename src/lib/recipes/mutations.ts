@@ -113,7 +113,7 @@ export async function createRecipe(input: RecipeInput, isAutosave?: boolean): Pr
   if (error || !data) return { ok: false, error: error?.message ?? "Could not create recipe." };
 
   if (!isAutosave) {
-    await revalidateForRecipe(input.slug, input.pageSlug, input.pageRoute, input.status === "published");
+    revalidateForRecipe(input.slug, input.pageSlug, input.pageRoute, input.status === "published");
   }
 
   if (input.status === "published") {
@@ -142,7 +142,7 @@ export async function updateRecipe(
   if (error) return { ok: false, error: error.message };
 
   if (!isAutosave) {
-    await revalidateForRecipe(
+    revalidateForRecipe(
       input.slug,
       input.pageSlug,
       input.pageRoute,
