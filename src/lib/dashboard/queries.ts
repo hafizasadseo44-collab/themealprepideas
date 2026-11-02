@@ -1,7 +1,17 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/session";
-import type { BlogPost } from "@/lib/posts/types";
+
+export type RecentPost = {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  date: string | null;
+  category: string;
+  hero_image_url: string | null;
+  author_id: string | null;
+};
 
 export type DashboardStats = {
   total: number;
@@ -10,7 +20,7 @@ export type DashboardStats = {
   scheduled: number;
   mediaCount: number;
   categoryBreakdown: { name: string; count: number }[];
-  recentPosts: BlogPost[];
+  recentPosts: RecentPost[];
   isAdmin: boolean;
 };
 
@@ -36,7 +46,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase.from("posts").select("category").order("category"),
     supabase
       .from("posts")
-      .select("id, title, slug, status, published_at, category, hero_image_url, author_id, created_at, updated_at")
+      .select("id, title, slug, status, published_at, category, hero_image_url, author_id")
       .order("created_at", { ascending: false })
       .limit(5),
   ]);
@@ -45,6 +55,17 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   (categoryRows ?? []).forEach((r: { category: string }) =>
     categoryMap.set(r.category, (categoryMap.get(r.category) ?? 0) + 1)
   );
+
+  const recentPosts: RecentPost[] = (recentRows ?? []).map((r) => ({
+    id: r.id,
+    title: r.title,
+    slug: r.slug,
+    status: r.status,
+    date: r.published_at ?? null,
+    category: r.category,
+    hero_image_url: r.hero_image_url ?? null,
+    author_id: r.author_id ?? null,
+  }));
 
   return {
     total: total ?? 0,
@@ -55,7 +76,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     categoryBreakdown: Array.from(categoryMap.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count),
-    recentPosts: (recentRows ?? []) as BlogPost[],
+    recentPosts,
     isAdmin: profile?.role === "admin",
   };
 }

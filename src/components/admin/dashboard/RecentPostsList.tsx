@@ -4,9 +4,9 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, FileText } from "lucide-react";
 import PostStatusBadge from "@/components/admin/posts/PostStatusBadge";
-import type { BlogPost } from "@/lib/posts/types";
+import type { RecentPost } from "@/lib/dashboard/queries";
 
-export default function RecentPostsList({ posts }: { posts: BlogPost[] }) {
+export default function RecentPostsList({ posts }: { posts: RecentPost[] }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
