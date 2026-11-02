@@ -129,6 +129,11 @@ export default async function RecipePage({
   const cookMinutes = recipe.cookTimeMinutes ?? parseMinutesFromFact(findFact(timeFacts, /^cook/i));
   const totalMinutes = recipe.totalTimeMinutes ?? parseMinutesFromFact(findFact(timeFacts, /^total/i));
 
+  const recipeCategory = recipe.tag || recipe.pageName || "Meal Prep";
+  const recipeKeywords = [recipe.seo.focusKeyword, recipe.tag, recipe.pageName, "meal prep"]
+    .filter((v): v is string => Boolean(v))
+    .join(", ");
+
   const recipeSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Recipe",
@@ -138,17 +143,29 @@ export default async function RecipePage({
     mainEntityOfPage: canonicalUrl,
     datePublished: recipe.createdAt,
     dateModified: recipe.updatedAt,
-    author: { "@type": "Organization", name: "The Meal Prep Ideas", url: SITE_URL },
+    author: {
+      "@type": "Person",
+      name: recipe.author?.name || "The Meal Prep Ideas Team",
+      url: SITE_URL,
+    },
+    publisher: { "@type": "Organization", name: "The Meal Prep Ideas", url: SITE_URL },
     ...(recipe.image ? { image: [recipe.image] } : {}),
-    ...(recipe.tag || recipe.pageName ? { recipeCategory: recipe.tag || recipe.pageName } : {}),
-    ...(recipe.tag || recipe.pageName ? { keywords: [recipe.tag, recipe.pageName].filter(Boolean).join(", ") } : {}),
+    recipeCategory,
+    recipeCuisine: "American",
+    keywords: recipeKeywords,
     ...(prepMinutes ? { prepTime: toIsoDuration(prepMinutes) } : {}),
     ...(cookMinutes ? { cookTime: toIsoDuration(cookMinutes) } : {}),
     ...(totalMinutes ? { totalTime: toIsoDuration(totalMinutes) } : {}),
     ...(recipe.servingsLabel || recipe.servings ? { recipeYield: recipe.servingsLabel ?? `${recipe.servings}` } : {}),
     ...(ingredients.length > 0 ? { recipeIngredient: ingredients } : {}),
     ...(instructions.length > 0
-      ? { recipeInstructions: instructions.map((text) => ({ "@type": "HowToStep", text })) }
+      ? {
+          recipeInstructions: instructions.map((text, i) => ({
+            "@type": "HowToStep",
+            name: `Step ${i + 1}`,
+            text,
+          })),
+        }
       : {}),
     ...(hasNutrition ? { nutrition } : {}),
     ...(recipe.rating != null && recipe.ratingCount > 0
