@@ -140,7 +140,7 @@ export default async function RecipePage({
     dateModified: recipe.updatedAt,
     author: { "@type": "Organization", name: "The Meal Prep Ideas", url: SITE_URL },
     ...(recipe.image ? { image: [recipe.image] } : {}),
-    ...(recipe.tag ? { recipeCategory: recipe.tag } : {}),
+    ...(recipe.tag || recipe.pageName ? { recipeCategory: recipe.tag || recipe.pageName } : {}),
     ...(recipe.tag || recipe.pageName ? { keywords: [recipe.tag, recipe.pageName].filter(Boolean).join(", ") } : {}),
     ...(prepMinutes ? { prepTime: toIsoDuration(prepMinutes) } : {}),
     ...(cookMinutes ? { cookTime: toIsoDuration(cookMinutes) } : {}),
