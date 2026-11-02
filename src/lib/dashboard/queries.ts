@@ -1,12 +1,13 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/session";
+import type { PostStatus } from "@/lib/posts/types";
 
 export type RecentPost = {
   id: string;
   title: string;
   slug: string;
-  status: string;
+  status: PostStatus;
   date: string | null;
   category: string;
   hero_image_url: string | null;
@@ -60,7 +61,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     id: r.id,
     title: r.title,
     slug: r.slug,
-    status: r.status,
+    status: r.status as PostStatus,
     date: r.published_at ?? null,
     category: r.category,
     hero_image_url: r.hero_image_url ?? null,
