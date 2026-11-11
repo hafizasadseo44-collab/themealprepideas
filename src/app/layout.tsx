@@ -99,6 +99,17 @@ export default async function RootLayout({
             strategy="afterInteractive"
             crossOrigin="anonymous"
           />
+          <Script
+            src="https://www.googletagmanager.com/gtm.js?id=GTM-NBSLLG29"
+            strategy="afterInteractive"
+          />
+          <Script id="gtm-init" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+            `}
+          </Script>
         </head>
       <body className="min-h-full flex flex-col bg-brand-cream text-brand-body font-sans">
         <script
