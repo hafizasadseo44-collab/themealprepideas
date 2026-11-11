@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import { SITE_SOCIALS } from "@/data/site";
@@ -92,6 +93,13 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
       className={`${dmSerif.variable} ${jakarta.variable} h-full antialiased`}
     >
+      <head>
+          <Script
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6981374836967148"
+            strategy="afterInteractive"
+            crossOrigin="anonymous"
+          />
+        </head>
       <body className="min-h-full flex flex-col bg-brand-cream text-brand-body font-sans">
         <script
           type="application/ld+json"
