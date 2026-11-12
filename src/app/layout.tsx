@@ -96,14 +96,14 @@ export default async function RootLayout({
       <head>
           <Script
             src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5587923767051472"
-            strategy="afterInteractive"
+            strategy="beforeInteractive"
             crossOrigin="anonymous"
           />
           <Script
             src="https://www.googletagmanager.com/gtm.js?id=GTM-NBSLLG29"
-            strategy="afterInteractive"
+            strategy="beforeInteractive"
           />
-          <Script id="gtm-init" strategy="afterInteractive">
+          <Script id="gtm-init" strategy="beforeInteractive">
             {`
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
