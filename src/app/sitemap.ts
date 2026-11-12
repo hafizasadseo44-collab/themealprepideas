@@ -24,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/privacy-policy`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/accessibility`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/macro-calculator`, changeFrequency: "monthly", priority: 0.75, lastModified: now },
   ];
 
   const pageRoutes: MetadataRoute.Sitemap = pages
