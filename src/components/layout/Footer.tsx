@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChefHat, ArrowRight, Mail } from "lucide-react";
+import { ChefHat, ArrowRight, Mail, Calculator } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import { byDiet, byMealType, SITE_SOCIALS } from "@/data/site";
@@ -15,6 +15,11 @@ const footerNav = [
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
+];
+
+// Add new tools here — they appear automatically in the footer Tools column
+const footerTools = [
+  { label: "Macro Calculator", href: "/macro-calculator", icon: Calculator },
 ];
 
 const legal = [
@@ -75,7 +80,7 @@ export default function Footer() {
       </div>
 
       <Container className="py-16">
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-6">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -139,6 +144,28 @@ export default function Footer() {
               </ul>
             </motion.div>
           ))}
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.45, delay: 0.06 * 4 }}
+          >
+            <p className="mb-4 text-sm font-semibold text-brand-heading">Free Tools</p>
+            <ul className="space-y-2.5">
+              {footerTools.map((tool) => (
+                <li key={tool.href}>
+                  <Link
+                    href={tool.href}
+                    className="flex items-center gap-2 text-sm text-brand-light transition-colors hover:text-brand-primary-dark"
+                  >
+                    <tool.icon className="size-3.5 shrink-0 text-brand-primary-dark/70" />
+                    {tool.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
         </div>
 
         <div className="mt-16">

@@ -17,6 +17,7 @@ import {
   ArrowRight,
   BookmarkCheck,
   LogOut,
+  Calculator,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,8 +28,14 @@ import { getMenuIcon } from "@/lib/menu/icons";
 import type { Customer } from "@/lib/customers/session";
 import type { MenuGroup } from "@/lib/menu/types";
 
-const navLinks: { label: string; href: string; icon: LucideIcon; hasMenu?: boolean }[] = [
+// Add new tools here — they appear automatically in the header nav dropdown and mobile menu
+const tools: { label: string; href: string }[] = [
+  { label: "Macro Calculator", href: "/macro-calculator" },
+];
+
+const navLinks: { label: string; href: string; icon: LucideIcon; hasMenu?: boolean; isTools?: boolean }[] = [
   { label: "Browse Categories", href: "/categories", icon: LayoutGrid, hasMenu: true },
+  { label: "Tools", href: "/macro-calculator", icon: Calculator, isTools: true },
   { label: "Blog", href: "/blog", icon: BookOpen },
   { label: "About", href: "/about", icon: Info },
   { label: "Contact", href: "/contact", icon: Mail },
@@ -48,6 +55,7 @@ export default function Header({ customer, menuGroups }: { customer: Customer | 
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
   useEffect(() => {
@@ -102,6 +110,59 @@ export default function Header({ customer, menuGroups }: { customer: Customer | 
         <nav className="hidden items-center gap-1 lg:flex">
           {navLinks.map((link) => {
             const active = isActive(link.href);
+            if (link.isTools) return (
+              <div
+                key={link.label}
+                className="relative"
+                onMouseEnter={() => setToolsOpen(true)}
+                onMouseLeave={() => setToolsOpen(false)}
+              >
+                <button className="relative flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[15px] font-medium text-brand-body transition-colors hover:text-brand-primary-dark">
+                  {(toolsOpen || tools.some((t) => isActive(t.href))) && (
+                    <motion.span
+                      layoutId="nav-active-pill"
+                      className="absolute inset-0 rounded-full bg-brand-primary/10"
+                      transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                    />
+                  )}
+                  <span className={cn("relative z-10 flex items-center gap-1.5", tools.some((t) => isActive(t.href)) ? "text-brand-primary-dark" : "")}>
+                    {link.label}
+                    <ChevronDown className={cn("size-3.5 transition-transform duration-300", toolsOpen && "rotate-180")} />
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {toolsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute left-1/2 top-full -translate-x-1/2 pt-3 w-[220px]"
+                    >
+                      <div className="overflow-hidden rounded-[18px] border border-brand-border/70 bg-white p-2 shadow-[0_28px_60px_-16px_rgba(17,24,39,0.22)]">
+                        {tools.map((tool, ti) => (
+                          <motion.div
+                            key={tool.href}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2, delay: ti * 0.04 }}
+                          >
+                            <Link
+                              href={tool.href}
+                              className="flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-brand-body transition-all duration-200 hover:bg-brand-primary/8 hover:text-brand-primary-dark"
+                              onClick={() => setToolsOpen(false)}
+                            >
+                              <Calculator className="size-4 shrink-0 text-brand-primary-dark" />
+                              {tool.label}
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
             return link.hasMenu ? (
               <div
                 key={link.label}
