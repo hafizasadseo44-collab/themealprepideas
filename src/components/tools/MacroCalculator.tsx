@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Container from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
+import { generatePrintHTML } from "./generatePrintHTML";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Gender = "male" | "female";
@@ -239,6 +240,8 @@ export default function MacroCalculator() {
   const [customProt, setCustomProt] = useState<number | null>(null);
   const [customCarb, setCustomCarb] = useState<number | null>(null);
   const [customFat, setCustomFat]   = useState<number | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(() => calculateMacros(form), [form]);
 
@@ -248,6 +251,7 @@ export default function MacroCalculator() {
   const adjProtein = Math.round((results.calories * activeProt / 100) / 4);
   const adjCarbs   = Math.round((results.calories * activeCarb / 100) / 4);
   const adjFat     = Math.round((results.calories * activeFat  / 100) / 9);
+  const isMetric   = form.unit === "metric";
 
   const handleAdjSlider = (macro: "prot" | "carb" | "fat", value: number) => {
     const rem = 100 - value;
@@ -267,7 +271,22 @@ export default function MacroCalculator() {
     setForm(defaultForm);
     setCustomProt(null); setCustomCarb(null); setCustomFat(null);
     setShowBF(false); setShowAdjust(false); setShowTips(false);
+    setShowResults(false);
   }, []);
+
+  const handleCalculate = useCallback(() => {
+    setShowResults(true);
+    setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  }, []);
+
+  const handlePrint = useCallback(() => {
+    const html = generatePrintHTML({ form, results, adjProtein, adjCarbs, adjFat, activeProt, activeCarb, activeFat });
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
+  }, [form, results, adjProtein, adjCarbs, adjFat, activeProt, activeCarb, activeFat]);
 
   const handleCopy = useCallback(async () => {
     const goal = GOAL_OPTIONS.find(g => g.value === form.goal)?.label ?? "";
@@ -291,7 +310,6 @@ export default function MacroCalculator() {
 
   const goalOpt = GOAL_OPTIONS.find(g => g.value === form.goal)!;
   const bmiInfo = bmiLabel(results.bmi);
-  const isMetric = form.unit === "metric";
 
   // ── Donut chart data ──
   const r = 54, cx = 60, cy = 60, circ = 2 * Math.PI * r;
@@ -326,7 +344,6 @@ export default function MacroCalculator() {
         .results-panel::-webkit-scrollbar { width: 4px; }
         .results-panel::-webkit-scrollbar-track { background: transparent; }
         .results-panel::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
-        @media print { header, footer, nav, .no-print { display: none !important; } body { background: white !important; } }
       `}</style>
 
       {/* ═══ HERO ═══════════════════════════════════════════════════════════════ */}
@@ -592,18 +609,36 @@ export default function MacroCalculator() {
                 </SectionCard>
               </motion.div>
 
+              {/* Calculate CTA */}
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+                className="pt-2">
+                <button type="button" onClick={handleCalculate}
+                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-brand-primary to-emerald-500 py-4 text-base font-black text-white shadow-[0_6px_24px_-4px_rgba(63,163,77,0.5)] transition-all hover:shadow-[0_8px_32px_-4px_rgba(63,163,77,0.6)] hover:scale-[1.01] active:scale-[0.99]">
+                  <span className="relative z-10 flex items-center justify-center gap-2.5">
+                    <Calculator className="size-5" />
+                    Calculate My Macros
+                    <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-opacity group-hover:opacity-100" />
+                </button>
+                <p className="mt-2 text-center text-[11px] text-gray-400">Free · Instant · Science-based formula</p>
+              </motion.div>
+
               {/* Reset button (mobile) */}
               <div className="flex justify-center lg:hidden">
                 <button type="button" onClick={handleReset}
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-500 shadow-sm transition-all hover:border-gray-300">
-                  <RotateCcw className="size-4" /> Reset All
+                  className="flex items-center gap-2 text-xs font-semibold text-gray-400 transition-all hover:text-gray-600">
+                  <RotateCcw className="size-3.5" /> Reset All
                 </button>
               </div>
             </div>
 
-            {/* ── RIGHT: Live Results Panel ────────────────────────────────────── */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.6 }}
+            {/* ── RIGHT: Results Panel (shown after Calculate) ─────────────────── */}
+            <AnimatePresence>
+            {showResults && (
+            <motion.div ref={resultsRef}
+              initial={{ opacity: 0, x: 20, scale: 0.97 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="results-panel lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto"
             >
               <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.13)] ring-1 ring-black/[0.04]">
@@ -838,7 +873,7 @@ export default function MacroCalculator() {
                     {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                     {copied ? "Copied!" : "Copy"}
                   </button>
-                  <button type="button" onClick={() => window.print()}
+                  <button type="button" onClick={handlePrint}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-gray-200 bg-gray-50 py-2.5 text-xs font-bold text-gray-600 transition-all hover:border-gray-300">
                     <Printer className="size-3.5" /> Print
                   </button>
@@ -855,6 +890,8 @@ export default function MacroCalculator() {
                 </div>
               </div>
             </motion.div>
+            )}
+            </AnimatePresence>
           </div>
         </Container>
       </section>
