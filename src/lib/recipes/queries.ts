@@ -246,11 +246,15 @@ export async function getSavedRecipeSlugs(customerId: string): Promise<Set<strin
 type CommentRow = {
   id: string;
   recipe_id: string;
+  parent_id?: string | null;
   author_name: string;
-  rating: number;
+  author_email?: string | null;
+  rating: number | null;
   body: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
+  is_admin?: boolean;
+  author_role?: "user" | "admin" | "author";
   recipes?: { title: string; slug: string } | null;
 };
 
@@ -258,47 +262,108 @@ function commentRowToComment(row: CommentRow): RecipeComment {
   return {
     id: row.id,
     recipeId: row.recipe_id,
+    parentId: row.parent_id ?? null,
     recipeTitle: row.recipes?.title,
     recipeSlug: row.recipes?.slug,
     authorName: row.author_name,
-    rating: row.rating,
+    authorEmail: row.author_email ?? null,
+    rating: row.rating ?? null,
     body: row.body,
     status: row.status,
     createdAt: row.created_at,
+    isAdmin: Boolean(row.is_admin),
+    authorRole: row.author_role ?? (row.is_admin ? "admin" : "user"),
+    replies: [],
   };
 }
 
-/** Public: approved comments for one recipe, newest first. */
+/** Public: approved comments for one recipe, organized into threads. */
 export async function getApprovedComments(recipeId: string): Promise<RecipeComment[]> {
   const supabase = createPublicClient();
-  const { data, error } = await supabase
+  
+  // Try with new columns (parent_id, is_admin, author_role)
+  let { data, error } = await supabase
     .from("recipe_comments")
-    .select("id, recipe_id, author_name, rating, body, status, created_at")
+    .select("id, recipe_id, parent_id, author_name, rating, body, status, created_at, is_admin, author_role")
     .eq("recipe_id", recipeId)
     .eq("status", "approved")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
-  if (error || !data) return [];
-  return (data as CommentRow[]).map(commentRowToComment);
+  // If column doesn't exist yet, fallback to legacy schema gracefully
+  if (error) {
+    const fallback = await supabase
+      .from("recipe_comments")
+      .select("id, recipe_id, author_name, rating, body, status, created_at")
+      .eq("recipe_id", recipeId)
+      .eq("status", "approved")
+      .order("created_at", { ascending: true });
+    data = fallback.data;
+  }
+
+  if (!data || data.length === 0) return [];
+
+  const allComments: RecipeComment[] = (data as CommentRow[]).map(commentRowToComment);
+
+  // Group comments into parent threads
+  const commentMap = new Map<string, RecipeComment>();
+  const topLevel: RecipeComment[] = [];
+
+  allComments.forEach((c) => {
+    c.replies = [];
+    commentMap.set(c.id, c);
+  });
+
+  allComments.forEach((c) => {
+    if (c.parentId && commentMap.has(c.parentId)) {
+      commentMap.get(c.parentId)!.replies!.push(c);
+    } else {
+      topLevel.push(c);
+    }
+  });
+
+  // Top-level comments newest first
+  topLevel.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  return topLevel;
 }
 
 /**
- * Admin: comments awaiting moderation. The `recipe_comments_staff_read` RLS
- * policy already restricts non-admin staff to comments on recipes they
- * authored — no extra filtering needed here.
+ * Admin: comments awaiting moderation + all comments with thread resolution.
  */
 export async function getCommentsForModeration(): Promise<RecipeComment[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  
+  let { data, error } = await supabase
     .from("recipe_comments")
-    .select("id, recipe_id, author_name, rating, body, status, created_at, recipes ( title, slug )")
+    .select("id, recipe_id, parent_id, author_name, author_email, rating, body, status, created_at, is_admin, author_role, recipes ( title, slug )")
     .order("created_at", { ascending: false });
 
-  if (error || !data) {
-    console.error("[getCommentsForModeration]", error?.message);
+  if (error) {
+    // Fallback if migration 0019 is pending
+    const fallback = await supabase
+      .from("recipe_comments")
+      .select("id, recipe_id, author_name, rating, body, status, created_at, recipes ( title, slug )")
+      .order("created_at", { ascending: false });
+    data = fallback.data;
+  }
+
+  if (!data) {
     return [];
   }
-  return (data as unknown as CommentRow[]).map(commentRowToComment);
+
+  const rawRows = data as unknown as CommentRow[];
+  const idMap = new Map<string, CommentRow>();
+  rawRows.forEach((r) => idMap.set(r.id, r));
+
+  return rawRows.map((row) => {
+    const comment = commentRowToComment(row);
+    if (row.parent_id && idMap.has(row.parent_id)) {
+      const parent = idMap.get(row.parent_id)!;
+      comment.parentAuthorName = parent.author_name;
+      comment.parentBody = parent.body;
+    }
+    return comment;
+  });
 }
 
 // ─── Author public queries ────────────────────────────────────────────────────

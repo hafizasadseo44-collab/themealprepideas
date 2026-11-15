@@ -199,7 +199,7 @@ export function generatePrintHTML({ form, results, adjProtein, adjCarbs, adjFat,
     '<div class="page">' +
     '<div class="header">' +
       '<div class="brand">' +
-        '<div class="brand-icon"><img src="https://themealprepideas.com/icon.svg" width="32" height="32" alt="The Meal Prep Ideas" style="filter:brightness(0) invert(1);" /></div>' +
+        '<div class="brand-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/><line x1="6" y1="13" x2="18" y2="13"/></svg></div>' +
         "<div>" +
           '<div class="brand-name">The Meal Prep Ideas</div>' +
           '<div class="brand-tagline">themealprepideas.com</div>' +

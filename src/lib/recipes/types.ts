@@ -10,10 +10,17 @@ export type RecipeComment = {
   recipeTitle?: string;
   recipeSlug?: string;
   authorName: string;
-  rating: number;
+  authorEmail?: string | null;
+  rating: number | null;
   body: string;
   status: CommentStatus;
   createdAt: string;
+  parentId?: string | null;
+  parentAuthorName?: string | null;
+  parentBody?: string | null;
+  isAdmin?: boolean;
+  authorRole?: "user" | "admin" | "author";
+  replies?: RecipeComment[];
 };
 
 export type RecipePage = {
