@@ -281,28 +281,32 @@ function commentRowToComment(row: CommentRow): RecipeComment {
 export async function getApprovedComments(recipeId: string): Promise<RecipeComment[]> {
   const supabase = createPublicClient();
   
-  // Try with new columns (parent_id, is_admin, author_role)
-  let { data, error } = await supabase
+  let rows: CommentRow[] = [];
+  const { data, error } = await supabase
     .from("recipe_comments")
     .select("id, recipe_id, parent_id, author_name, rating, body, status, created_at, is_admin, author_role")
     .eq("recipe_id", recipeId)
     .eq("status", "approved")
     .order("created_at", { ascending: true });
 
-  // If column doesn't exist yet, fallback to legacy schema gracefully
-  if (error) {
+  if (!error && data) {
+    rows = data as unknown as CommentRow[];
+  } else {
+    // If column doesn't exist yet, fallback to legacy schema gracefully
     const fallback = await supabase
       .from("recipe_comments")
       .select("id, recipe_id, author_name, rating, body, status, created_at")
       .eq("recipe_id", recipeId)
       .eq("status", "approved")
       .order("created_at", { ascending: true });
-    data = fallback.data;
+    if (fallback.data) {
+      rows = fallback.data as unknown as CommentRow[];
+    }
   }
 
-  if (!data || data.length === 0) return [];
+  if (rows.length === 0) return [];
 
-  const allComments: RecipeComment[] = (data as CommentRow[]).map(commentRowToComment);
+  const allComments: RecipeComment[] = rows.map(commentRowToComment);
 
   // Group comments into parent threads
   const commentMap = new Map<string, RecipeComment>();
@@ -333,29 +337,33 @@ export async function getApprovedComments(recipeId: string): Promise<RecipeComme
 export async function getCommentsForModeration(): Promise<RecipeComment[]> {
   const supabase = await createClient();
   
-  let { data, error } = await supabase
+  let rows: CommentRow[] = [];
+  const { data, error } = await supabase
     .from("recipe_comments")
     .select("id, recipe_id, parent_id, author_name, author_email, rating, body, status, created_at, is_admin, author_role, recipes ( title, slug )")
     .order("created_at", { ascending: false });
 
-  if (error) {
+  if (!error && data) {
+    rows = data as unknown as CommentRow[];
+  } else {
     // Fallback if migration 0019 is pending
     const fallback = await supabase
       .from("recipe_comments")
       .select("id, recipe_id, author_name, rating, body, status, created_at, recipes ( title, slug )")
       .order("created_at", { ascending: false });
-    data = fallback.data;
+    if (fallback.data) {
+      rows = fallback.data as unknown as CommentRow[];
+    }
   }
 
-  if (!data) {
+  if (rows.length === 0) {
     return [];
   }
 
-  const rawRows = data as unknown as CommentRow[];
   const idMap = new Map<string, CommentRow>();
-  rawRows.forEach((r) => idMap.set(r.id, r));
+  rows.forEach((r) => idMap.set(r.id, r));
 
-  return rawRows.map((row) => {
+  return rows.map((row) => {
     const comment = commentRowToComment(row);
     if (row.parent_id && idMap.has(row.parent_id)) {
       const parent = idMap.get(row.parent_id)!;

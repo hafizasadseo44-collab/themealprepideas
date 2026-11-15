@@ -10,7 +10,8 @@ import type { RecipeComment, CommentStatus } from "@/lib/recipes/types";
 
 type Filter = CommentStatus;
 
-function Stars({ value }: { value: number }) {
+function Stars({ value }: { value: number | null }) {
+  if (value == null) return null;
   return (
     <span className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (

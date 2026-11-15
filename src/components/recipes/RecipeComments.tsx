@@ -37,7 +37,8 @@ function timeAgo(iso: string) {
   return `${months} month${months > 1 ? "s" : ""} ago`;
 }
 
-function Stars({ value, size = "size-4" }: { value: number; size?: string }) {
+function Stars({ value, size = "size-4" }: { value: number | null | undefined; size?: string }) {
+  if (value == null) return null;
   return (
     <span className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (
