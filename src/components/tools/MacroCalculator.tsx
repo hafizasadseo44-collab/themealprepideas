@@ -11,6 +11,7 @@ import {
 import Container from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
 import { generatePrintHTML } from "./generatePrintHTML";
+import MacroCalculatorGuide from "./MacroCalculatorGuide";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Gender        = "male" | "female";
@@ -427,10 +428,10 @@ export default function MacroCalculator() {
             </motion.div>
 
             {/* Headline */}
-            <h1 className="font-display text-[52px] font-black leading-none sm:text-[72px] md:text-[88px] text-gray-900">
-              Macro{" "}
+            <h1 className="font-display text-[40px] font-black leading-tight sm:text-[60px] md:text-[72px] text-gray-900">
+              Free Macro Calculator:{" "}
               <span className="relative inline-block gradient-heading">
-                Calculator
+                Calculate Protein, Carbs &amp; Fat
                 <motion.svg initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                   transition={{ delay: 0.6, duration: 1.1, ease: "easeOut" }}
                   className="absolute -bottom-2 left-0 w-full overflow-visible" viewBox="0 0 500 10" fill="none">
@@ -448,9 +449,8 @@ export default function MacroCalculator() {
             </h1>
 
             <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.5 }}
-              className="mx-auto mt-6 max-w-lg text-lg leading-relaxed text-gray-500">
-              Enter your stats for a fully personalized daily macro plan — calories, protein, carbs & fat — powered by the{" "}
-              <span className="font-bold text-gray-700">Mifflin-St Jeor</span> equation.
+              className="mx-auto mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-gray-600">
+              Use our free Macro Calculator to estimate your daily calories, protein, carbohydrates, and fat based on your measurements and activity level. Choose your fitness goal, explore six diet styles, and customize your macro split to better understand your nutrition and plan balanced meals.
             </motion.p>
 
             {/* Feature pills */}
@@ -916,6 +916,11 @@ export default function MacroCalculator() {
         </motion.section>
       )}
       </AnimatePresence>
+
+      {/* ═══ RICH SEO & AEO NUTRITION GUIDE ═════════════════════════════════ */}
+      <div className="no-print">
+        <MacroCalculatorGuide />
+      </div>
     </>
   );
 }
